@@ -126,9 +126,10 @@ through `CameraControl.Export` and `Import`, the same path as Studio's camera sa
 - The three ProceduralParadise v3 cards stored 5, 6 and 5 slots, with slot 0 as the main view. After a cold
   reload of each checkpoint, `camera_slots_get` returned the saved pivot, rotation, distance and field of view
   within 1e-3 for every stored slot, and the main camera matched slot 0.
-- Captures of the main view and of `camera_slot_load` on the last stored slot matched the original renders:
-  1.4 to 5.2 mean absolute difference of 255 (1080p capture against the 4K supersampled render, both
-  downscaled to 480x270), against 78 between two different shots of the same scene.
+- After a cold reload, `camera_slot_load` on the first and last stored slot and a capture at the delivered
+  settings (3840x2160, 2x supersampling) matched the delivered renders within 0.16 to 1.87 mean absolute
+  difference of 255 (both downscaled to 480x270), against 78 between two different shots of the same scene.
+  The audit's 1080p captures measured 1.4 to 5.2; the extra difference is resolution-dependent glint shading.
 - Slots 10 and -1 were rejected ("Use 0-9.") without moving the camera, and 1.5 was rejected as a
   non-integer. Slots the tool did not save were reported with whatever the card already held.
 
