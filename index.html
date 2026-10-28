@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudioMCP Ecosystem Showcase</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="StudioMCP 0.1.0 RC1: from asset preparation to actual in-game renders, and back into the next decision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  /* Layout: full-bleed render plates alternate with schematic chapters on a 12-column grid (max 1320px);
+     a colour script of each shot's mean render colour indexes the twelve chapters. English sets the measure. */
+  --ground: #06080b;
+  --void: #000000;
+  --grid: rgba(127, 211, 247, .045);
+  --hair: #1b242e;
+  --scrim: rgba(6, 8, 11, .62);
+  --glass: rgba(6, 8, 11, .58);
+  --bar-solid: rgba(6, 8, 11, .84);
+  --shadow: rgba(0, 0, 0, .6);
+  /*@diagram-tokens*/
+  --deck: #0a0e13;
+  --node: #0f151c;
+  --node-state: #0a1a24;
+  --node-signal: #1b150c;
+  --hair-2: #2b3846;
+  --text: #edf1f5;
+  --soft: #a6b2be;
+  --dim: #6b7884;
+  --signal: #f5b25c;
+  --state: #7fd3f7;
+  --f-display: "Archivo", "Noto Sans SC", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --f-text: "IBM Plex Sans", "Noto Sans SC", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", "Noto Sans SC", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  --f-zh: "Noto Sans SC", "Microsoft YaHei UI", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  /*@end*/
+  --max: 1320px;
+  --gutter: clamp(16px, 4.6vw, 64px);
+  --bar-h: 56px;
+  --space: clamp(44px, 5.5vw, 80px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 16px);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--f-text);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-lang="zh"] body { font-size: 1rem; line-height: 1.8; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  background: var(--ground);
+}
+img { max-width: 100%; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+::selection { background: var(--state); color: var(--ground); }
+
+/* One language at a time; the buttons carry their own tags so they always show. */
+:root:not([data-lang="zh"]) [lang="zh-Hans"] { display: none !important; }
+:root[data-lang="zh"] [lang="en"] { display: none !important; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -120px; z-index: 50;
+  padding: 10px 14px; background: var(--text); color: var(--ground);
+  font: 600 .9rem/1 var(--f-text); text-decoration: none;
+}
+.skip:focus { top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.wrap {
+  width: 100%;
+  max-width: calc(var(--max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+.page { overflow-x: clip; }
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------------------------------------------------------------- top bar */
+.bar {
+  position: fixed; inset: 0 0 auto; z-index: 30;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: linear-gradient(180deg, var(--scrim), transparent);
+  border-bottom: 1px solid transparent;
+  transition: background-color .35s ease, border-color .35s ease;
+}
+.bar.is-solid {
+  background: var(--bar-solid);
+  border-bottom-color: var(--hair);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.bar-in { height: var(--bar-h); display: flex; align-items: center; gap: 24px; }
+.bar-mark {
+  display: inline-flex; align-items: baseline; gap: 10px; text-decoration: none;
+  font-family: var(--f-display); font-stretch: 120%; font-weight: 760; font-size: 1.02rem; letter-spacing: -.01em;
+}
+.bar-ver { font: 500 .66rem/1 var(--f-mono); letter-spacing: .12em; color: var(--soft); }
+.bar-script { display: flex; align-items: center; gap: 4px; margin-inline: auto; height: 20px; }
+.bs-seg {
+  display: block; width: 22px; height: 6px;
+  background: var(--seg); border-top: 1px solid var(--key);
+  opacity: .62; transition: height .25s ease, opacity .25s ease;
+}
+.bs-seg:nth-child(1), .bs-seg:nth-child(6), .bs-seg:nth-child(11) { margin-right: 10px; }
+.bs-seg:hover, .bs-seg[aria-current="true"] { opacity: 1; height: 14px; }
+.bar-lang { display: flex; border: 1px solid var(--hair-2); }
+.bar-lang button {
+  appearance: none; border: 0; margin: 0; cursor: pointer;
+  padding: 7px 11px; background: transparent; color: var(--soft);
+  font: 500 .72rem/1 var(--f-mono); letter-spacing: .1em;
+}
+.bar-lang button[lang] { font-family: var(--f-zh); letter-spacing: .04em; }
+.bar-lang button[aria-pressed="true"] { background: var(--text); color: var(--ground); }
+@media (max-width: 680px) {
+  .bar-script { display: none; }
+  .bar-lang { margin-left: auto; }
+}
+
+/* ---------------------------------------------------------------- hero */
+.hero { position: relative; --wm: clamp(3rem, 12.6vw, 12rem); }
+.plate {
+  position: relative; margin: 0; overflow: hidden; background: var(--void);
+  height: clamp(420px, min(56.25vw, 84vh), 1080px);
+}
+.plate img {
+  display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%;
+  animation: expose 1.8s cubic-bezier(.2, .7, .2, 1) both;
+}
+/* The hero resolves like an exposure ramp; it starts dim but readable. */
+@keyframes expose {
+  from { filter: brightness(.62) saturate(.75); transform: scale(1.03); }
+  to { filter: none; transform: none; }
+}
+.plate::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, var(--scrim) 0%, transparent 20%, transparent 52%, var(--ground) 100%);
+}
+.plate-hud {
+  position: absolute; z-index: 1; margin: 0;
+  top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 20px);
+  right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  font: 500 .7rem/1.6 var(--f-mono); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--soft); text-align: right; text-shadow: 0 1px 2px var(--shadow);
+}
+.hero-title { position: relative; z-index: 2; margin-top: calc(-1 * (2.4rem + .58 * var(--wm))); }
+.hero-title .eyebrow { margin-bottom: 14px; color: var(--text); }
+.wordmark {
+  margin: 0; white-space: nowrap;
+  font-family: var(--f-display); font-stretch: 125%; font-weight: 800;
+  font-size: var(--wm); line-height: .8; letter-spacing: -.04em;
+}
+.intro {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 40px 24px;
+  padding-top: clamp(32px, 4.5vw, 64px); padding-bottom: clamp(56px, 8vw, 112px);
+}
+.intro-main { grid-column: 1 / span 7; min-width: 0; }
+.intro-side { grid-column: 9 / span 4; min-width: 0; display: grid; gap: 22px; align-content: start; }
+.kicker {
+  margin: 0 0 18px; text-wrap: balance;
+  font-family: var(--f-display); font-weight: 780; font-size: clamp(2.1rem, 4.4vw, 4rem); line-height: 1; letter-spacing: -.02em;
+}
+:root[data-lang="zh"] .kicker { font-family: var(--f-zh); font-weight: 900; font-size: clamp(1.9rem, 3.9vw, 3.5rem); line-height: 1.15; letter-spacing: .02em; }
+.lead { margin: 0; max-width: 34em; color: var(--soft); font-size: clamp(1.1rem, 1.5vw, 1.35rem); line-height: 1.5; text-wrap: pretty; }
+.verbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--hair-2); }
+.verbs li { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--hair); font-family: var(--f-display); font-weight: 650; font-size: 1.15rem; }
+.meta { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.meta div { display: grid; gap: 2px; min-width: 0; }
+.meta dt { font: 500 .66rem/1.3 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.meta dd { margin: 0; font-size: .92rem; line-height: 1.4; }
+.fine { margin: 0; font-size: .86rem; line-height: 1.55; color: var(--dim); }
+@media (max-width: 900px) { .intro-main, .intro-side { grid-column: 1 / -1; } }
+
+/* Colour script: the chapter index. */
+.script { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 6px; padding-bottom: clamp(72px, 10vw, 140px); }
+.script-group {
+  grid-row: 1; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--hair-2);
+  font: 500 .66rem/1.25 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.script-cell { grid-row: 2; display: grid; gap: 8px; align-content: start; min-width: 0; text-decoration: none; }
+.script-bar {
+  display: block; height: clamp(44px, 6vw, 88px);
+  background: var(--seg); border-top: 2px solid var(--key);
+  transition: transform .25s ease;
+}
+.script-cell:hover .script-bar { transform: translateY(-4px); }
+.script-num { font: 500 .7rem/1 var(--f-mono); letter-spacing: .1em; color: var(--dim); }
+.script-name { font-size: .8rem; line-height: 1.3; color: var(--soft); }
+.script-note { grid-column: 1 / -1; grid-row: 3; margin: 20px 0 0; font-size: .82rem; color: var(--dim); }
+@media (max-width: 1080px) {
+  .script { grid-template-columns: repeat(6, minmax(0, 1fr)); row-gap: 18px; }
+  .script-group { display: none; }
+  .script-cell, .script-note { grid-row: auto; }
+}
+@media (max-width: 560px) { .script-name { display: none; } }
+
+/* ---------------------------------------------------------------- chapters */
+.ch { position: relative; padding-top: clamp(84px, 11vw, 168px); padding-bottom: clamp(84px, 11vw, 168px); border-top: 1px solid var(--hair); }
+.ch-schematic {
+  background-color: var(--deck);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.ch-start { background: linear-gradient(180deg, var(--deck), var(--ground) 70%); }
+.ch-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px 24px; align-items: end; }
+.eyebrow {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0;
+  font: 500 .74rem/1.2 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--soft);
+}
+:root[data-lang="zh"] .eyebrow { letter-spacing: .1em; }
+.ch-head .eyebrow { grid-column: 1 / -1; margin-bottom: 6px; }
+.eb-num { color: var(--signal); }
+.eb-of { color: var(--dim); }
+.h2 {
+  grid-column: 1 / span 7; margin: 0; text-wrap: balance;
+  font-family: var(--f-display); font-stretch: 86%; font-weight: 760;
+  font-size: clamp(2.4rem, 5.4vw, 5rem); line-height: .97; letter-spacing: -.018em;
+}
+:root[data-lang="zh"] .h2 { font-family: var(--f-zh); font-weight: 900; font-size: clamp(2rem, 4.6vw, 4.25rem); line-height: 1.14; letter-spacing: .01em; }
+.ch-head .lead { grid-column: 9 / span 4; }
+@media (max-width: 960px) { .h2, .ch-head .lead { grid-column: 1 / -1; } }
+
+.caption { margin: 22px 0 0; max-width: 46em; color: var(--soft); font-size: 1rem; line-height: 1.6; text-wrap: pretty; }
+.points { display: grid; gap: 32px 44px; margin-top: var(--space); }
+.points.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.points.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.point { min-width: 0; padding-top: 18px; border-top: 1px solid var(--hair-2); }
+.point h3 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 680; font-size: 1.2rem; line-height: 1.25; }
+.point p { margin: 0; color: var(--soft); }
+@media (max-width: 860px) { .points.c3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .points.c2 { grid-template-columns: 1fr; } }
+.note {
+  margin-top: var(--space); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 12px 44px;
+  padding-top: 28px; padding-bottom: 28px; border-top: 1px solid var(--signal); border-bottom: 1px solid var(--hair-2);
+}
+.note h3 { margin: 0; text-wrap: balance; font-family: var(--f-display); font-weight: 700; font-size: clamp(1.3rem, 2.1vw, 1.7rem); line-height: 1.2; }
+.note p { margin: 0; color: var(--soft); font-size: 1.08rem; }
+@media (max-width: 760px) { .note { grid-template-columns: 1fr; } }
+:root[data-lang="zh"] :is(.point h3, .note h3, .seq h3, .steps h3, .rig-head h3, .mx-role, .verbs li) { font-family: var(--f-zh); font-weight: 700; }
+
+/* ---------------------------------------------------------------- diagrams */
+.dg-figure { margin: var(--space) 0 0; }
+.dg-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.dg { display: block; width: 100%; min-width: 860px; height: auto; }
+.dg-legend { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 18px 0 0; font: 500 .72rem/1.3 var(--f-mono); letter-spacing: .06em; color: var(--soft); }
+.k { display: inline-flex; align-items: center; gap: 10px; }
+.k::before { content: ""; flex: none; width: 26px; height: 2px; background: var(--soft); }
+.k-state::before { background: var(--state); }
+.k-signal::before { background: var(--signal); }
+.k-mcp::before { width: 14px; height: 14px; background: var(--node-state); border: 1px solid var(--state); }
+/*@diagram-rules*/
+.dg text { font-family: var(--f-text); }
+.dg .n rect { fill: var(--node); stroke: var(--hair-2); stroke-width: 1; }
+.dg .n.core rect { stroke: var(--soft); }
+.dg .n.found rect { stroke: var(--soft); stroke-width: 1.5; }
+.dg .n.state rect { fill: var(--node-state); stroke: var(--state); }
+.dg .n.signal rect { fill: var(--node-signal); stroke: var(--signal); }
+.dg .n-title { font-family: var(--f-display); font-weight: 650; font-size: 17px; fill: var(--text); }
+.dg .n-title.big { font-size: 23px; font-weight: 720; }
+.dg .n-sub { font-size: 13.5px; fill: var(--soft); }
+.dg .n-num { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; fill: var(--signal); }
+.dg .n-title[lang="zh-Hans"] { font-family: var(--f-zh); font-weight: 700; font-size: 16.5px; }
+.dg .n-title.big[lang="zh-Hans"] { font-size: 21px; }
+.dg .n-sub[lang="zh-Hans"] { font-family: var(--f-zh); }
+.dg .e { fill: none; stroke: var(--soft); stroke-width: 1.4; stroke-opacity: .75; }
+.dg .e.state { stroke: var(--state); stroke-opacity: 1; }
+.dg .e.signal { stroke: var(--signal); stroke-opacity: 1; }
+.dg .e.dash { stroke-dasharray: 5 6; }
+.dg .e.flow { stroke-dasharray: 8 7; animation: dg-flow 1.5s linear infinite; }
+@keyframes dg-flow { to { stroke-dashoffset: -30; } }
+.dg .sock { fill: var(--deck); stroke: var(--soft); stroke-width: 1.4; }
+.dg .sock.state { stroke: var(--state); }
+.dg .sock.signal { stroke: var(--signal); }
+.dg .e-label { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .03em; fill: var(--soft); }
+.dg .e-label.state { fill: var(--state); }
+.dg .e-label.signal { fill: var(--signal); }
+.dg .e-label[lang="zh-Hans"] { font-family: var(--f-zh); font-size: 13px; letter-spacing: 0; }
+.mk-n { fill: var(--soft); }
+.mk-state { fill: var(--state); }
+.mk-signal { fill: var(--signal); }
+@media (prefers-reduced-motion: reduce) { .dg .e.flow { animation: none; } }
+/*@end*/
+
+/* Purposes matrix */
+.matrix { margin-top: var(--space); display: grid; gap: 14px; }
+.mx-row { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(4, minmax(0, 1fr)); column-gap: 30px; align-items: stretch; }
+.mx-role { display: flex; align-items: center; padding: 14px 0; border-top: 1px solid var(--hair-2); font-family: var(--f-display); font-weight: 680; font-size: 1.08rem; line-height: 1.25; }
+.mx-step {
+  position: relative; display: flex; align-items: center; min-height: 64px; padding: 14px 16px;
+  background: var(--node); border: 1px solid var(--hair-2); font-size: .95rem; line-height: 1.3;
+}
+.mx-step.mcp { background: var(--node-state); border-color: var(--state); }
+.mx-step.mcp::after {
+  content: "MCP"; position: absolute; top: -8px; right: 10px; padding: 1px 6px;
+  font: 500 .6rem/1.4 var(--f-mono); letter-spacing: .14em; color: var(--ground); background: var(--state);
+}
+.mx-step + .mx-step::before {
+  content: "\2192"; position: absolute; left: -24px; top: 50%; transform: translateY(-50%);
+  font: 400 1rem/1 var(--f-mono); color: var(--soft);
+}
+@media (max-width: 860px) {
+  .mx-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mx-role { grid-column: 1 / -1; padding: 16px 0 4px; }
+  .mx-step + .mx-step::before { display: none; }
+}
+
+/* ---------------------------------------------------------------- render viewers */
+.viewer { display: grid; gap: 14px; margin-top: var(--space); }
+.stage { position: relative; margin: 0; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--void); }
+.stage-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.stage-hud {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px;
+  padding: 44px 18px 14px; background: linear-gradient(180deg, transparent, var(--scrim));
+  font: 500 .72rem/1.4 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text);
+}
+.hud-meta { color: var(--soft); }
+.strip { display: grid; gap: 10px; }
+.strip.c6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.strip.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.strip [role="tab"] {
+  appearance: none; border: 0; padding: 0; margin: 0; background: none; cursor: pointer;
+  display: grid; gap: 8px; align-content: start; min-width: 0;
+  color: var(--soft); font: inherit; text-align: left;
+}
+.strip img {
+  display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+  opacity: .5; outline: 1px solid var(--hair-2); outline-offset: -1px; transition: opacity .2s ease;
+}
+.strip [role="tab"]:hover img { opacity: .85; }
+.strip [aria-selected="true"] img { opacity: 1; outline: 2px solid var(--text); outline-offset: 2px; }
+.t-label { font: 500 .72rem/1.35 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text); }
+.t-param { font: 400 .78rem/1.45 var(--f-mono); color: var(--dim); }
+.strip [aria-selected="true"] .t-param { color: var(--soft); }
+@media (max-width: 760px) {
+  .strip.c6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .strip.c4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.rigs { display: grid; gap: clamp(56px, 7vw, 96px); margin-top: var(--space); }
+.rig .viewer { margin-top: 18px; }
+.rig-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding-top: 16px; border-top: 1px solid var(--hair-2); }
+.rig-head h3 { margin: 0; font-family: var(--f-display); font-weight: 680; font-size: 1.35rem; }
+.rig-head .caption { margin: 0; }
+.seq { list-style: none; padding: 0; margin: var(--space) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 40px; }
+.seq li { padding-top: 18px; border-top: 1px solid var(--hair-2); }
+.seq-num { display: block; margin-bottom: 12px; font: 500 .74rem/1 var(--f-mono); letter-spacing: .14em; color: var(--signal); }
+.seq h3 { margin: 0 0 8px; font-family: var(--f-display); font-weight: 680; font-size: 1.2rem; }
+.seq p { margin: 0; color: var(--soft); }
+@media (max-width: 860px) { .seq { grid-template-columns: 1fr; } }
+
+/* Before / after */
+.cmp { display: grid; gap: 14px; margin-top: var(--space); }
+.cmp-stage {
+  position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+  background: var(--void); --split: 50%; touch-action: pan-y;
+}
+.cmp-stage img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+.cmp-b { clip-path: inset(0 0 0 var(--split)); }
+.cmp-tag {
+  position: absolute; top: 14px; z-index: 1; padding: 6px 10px; pointer-events: none;
+  font: 500 .7rem/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text); background: var(--glass);
+}
+.cmp-tag.a { left: 14px; }
+.cmp-tag.b { right: 14px; }
+.cmp-range {
+  position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: ew-resize; -webkit-appearance: none; appearance: none;
+}
+.cmp-handle { position: absolute; z-index: 2; top: 0; bottom: 0; left: var(--split); width: 2px; margin-left: -1px; background: var(--text); pointer-events: none; }
+.cmp-knob {
+  position: absolute; top: 50%; left: 50%; width: 46px; height: 46px; transform: translate(-50%, -50%);
+  border: 2px solid var(--text); border-radius: 50%; background: var(--glass);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.cmp-knob::before, .cmp-knob::after { content: ""; position: absolute; top: 50%; transform: translateY(-50%); border: 6px solid transparent; }
+.cmp-knob::before { left: 6px; border-left-width: 0; border-right-color: var(--text); }
+.cmp-knob::after { right: 6px; border-right-width: 0; border-left-color: var(--text); }
+.cmp-range:focus-visible ~ .cmp-handle .cmp-knob { outline: 2px solid var(--signal); outline-offset: 3px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs [role="tab"] {
+  appearance: none; margin: 0; padding: 9px 14px; cursor: pointer;
+  border: 1px solid var(--hair-2); background: transparent; color: var(--soft);
+  font: 500 .74rem/1.2 var(--f-mono); letter-spacing: .1em; text-transform: uppercase;
+}
+.tabs [role="tab"]:hover { color: var(--text); border-color: var(--soft); }
+.tabs [aria-selected="true"] { background: var(--text); border-color: var(--text); color: var(--ground); }
+:root[data-lang="zh"] :is(.tabs [role="tab"], .t-label, .cmp-tag, .stage-hud, .plate-hud, .pin-label) { letter-spacing: .04em; }
+
+/* ---------------------------------------------------------------- material detail */
+.detail { position: relative; margin: var(--space) auto 0; max-width: 1680px; aspect-ratio: 16 / 9; overflow: hidden; background: var(--void); }
+.detail img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.detail .detail-hud { top: 18px; right: 18px; }
+.pin { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; gap: 10px; transform: translate(-15px, -50%); }
+.pin.l { flex-direction: row-reverse; transform: translate(calc(-100% + 15px), -50%); }
+.pin-dot {
+  flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--text); background: var(--glass); color: var(--text); font: 600 .78rem/1 var(--f-mono);
+}
+.pin-label {
+  padding: 6px 10px; background: var(--glass); color: var(--text); white-space: nowrap;
+  font: 500 .74rem/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase;
+}
+.pin-legend { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 44px; }
+.pin-legend li { display: flex; align-items: flex-start; gap: 14px; color: var(--soft); }
+.pin-legend .pin-dot { width: 26px; height: 26px; font-size: .72rem; }
+.pin-legend strong { margin-right: 6px; color: var(--text); font-weight: 600; }
+@media (max-width: 700px) {
+  .pin-label { display: none; }
+  .pin-legend { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------- start */
+.steps { list-style: none; padding: 0; margin: var(--space) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+.steps li { padding-top: 22px; border-top: 1px solid var(--hair-2); }
+.big-num {
+  display: block; margin-bottom: 20px; color: var(--dim);
+  font-family: var(--f-display); font-stretch: 125%; font-weight: 300; font-size: clamp(3rem, 6vw, 5.25rem); line-height: .9;
+}
+.steps h3 { margin: 0 0 10px; font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; }
+.steps p { margin: 0; color: var(--soft); }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; gap: 28px; } }
+.projects-head { margin-top: clamp(64px, 8vw, 112px); }
+.projects-head h3 { margin: 0 0 6px; font: 500 .74rem/1.2 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--soft); }
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+.project { display: grid; gap: 6px; min-width: 0; padding: 24px 0; border-top: 1px solid var(--hair-2); text-decoration: none; }
+.p-name {
+  font-family: var(--f-display); font-weight: 720; font-size: clamp(1.3rem, 2.5vw, 2.1rem); line-height: 1.1; letter-spacing: -.01em;
+  overflow-wrap: anywhere; transition: color .2s ease;
+}
+.project:hover .p-name, .project:focus-visible .p-name { color: var(--signal); }
+.p-desc { color: var(--soft); }
+.p-url { font: 400 .78rem/1.4 var(--f-mono); color: var(--dim); overflow-wrap: anywhere; }
+@media (max-width: 700px) { .projects { grid-template-columns: 1fr; } }
+.colophon { margin-top: 40px; display: grid; gap: 6px; font-size: .88rem; color: var(--dim); }
+.colophon p { margin: 0; }
+
+.foot { border-top: 1px solid var(--hair); padding-top: 28px; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+.foot-in { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 28px; font: 500 .72rem/1.4 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.foot-mark { font-family: var(--f-display); font-stretch: 120%; font-weight: 760; font-size: .95rem; letter-spacing: -.01em; text-transform: none; color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .plate img { animation: none; }
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+<script>(function(){var l='en';try{var h=location.hash.slice(1);if(h==='zh'||h==='en'){l=h}else{var s=localStorage.getItem('studiomcp-showcase-lang');if(s==='zh'||s==='en'){l=s}}}catch(e){}var r=document.documentElement;r.setAttribute('data-lang',l);r.lang=l==='zh'?'zh-Hans':'en'})();</script>
+</head>
+<body>
+<a class="skip" href="#ch-02"><span lang="en">Skip to the chapters</span><span lang="zh-Hans">跳到正文</span></a>
+<header class="bar" data-bar><div class="wrap bar-in">
+<a class="bar-mark" href="#ch-01">StudioMCP<span class="bar-ver">0.1.0 RC1</span></a>
+<nav class="bar-script" aria-label="Chapters"><a class="bs-seg" href="#ch-01" data-nav="01" style="--seg: linear-gradient(90deg, #2a497f 0.00% 100.00%); --key: #a5d4eb"><span class="sr">01 <span lang="en">The final piece</span><span lang="zh-Hans">最后一块拼图</span></span></a><a class="bs-seg" href="#ch-02" data-nav="02" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">02 <span lang="en">The creative loop</span><span lang="zh-Hans">创作闭环</span></span></a><a class="bs-seg" href="#ch-03" data-nav="03" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">03 <span lang="en">Four purposes</span><span lang="zh-Hans">四种目标</span></span></a><a class="bs-seg" href="#ch-04" data-nav="04" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">04 <span lang="en">Iteration</span><span lang="zh-Hans">迭代</span></span></a><a class="bs-seg" href="#ch-05" data-nav="05" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">05 <span lang="en">Foundations</span><span lang="zh-Hans">共享基建</span></span></a><a class="bs-seg" href="#ch-06" data-nav="06" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">06 <span lang="en">Portability</span><span lang="zh-Hans">跨 Agent 迁移</span></span></a><a class="bs-seg" href="#ch-07" data-nav="07" style="--seg: linear-gradient(90deg, #2a497f 0.00% 16.67%, #224977 16.67% 33.33%, #4d5ca9 33.33% 50.00%, #132654 50.00% 66.67%, #132e6c 66.67% 83.33%, #070f2e 83.33% 100.00%); --key: #c2d0ef"><span class="sr">07 <span lang="en">CrystalFantasy</span><span lang="zh-Hans">CrystalFantasy</span></span></a><a class="bs-seg" href="#ch-08" data-nav="08" style="--seg: linear-gradient(90deg, #5c8749 0.00% 50.00%, #648768 50.00% 100.00%); --key: #f7f4ee"><span class="sr">08 <span lang="en">Hypothesis</span><span lang="zh-Hans">假设与参数</span></span></a><a class="bs-seg" href="#ch-09" data-nav="09" style="--seg: linear-gradient(90deg, #648368 0.00% 33.33%, #4d6c51 33.33% 66.67%, #607f70 66.67% 100.00%); --key: #a9be9c"><span class="sr">09 <span lang="en">The change</span><span lang="zh-Hans">改前改后</span></span></a><a class="bs-seg" href="#ch-10" data-nav="10" style="--seg: linear-gradient(90deg, #587783 0.00% 25.00%, #4d5151 25.00% 50.00%, #2a2a26 50.00% 75.00%, #223958 75.00% 100.00%); --key: #7dbcd0"><span class="sr">10 <span lang="en">Rainline</span><span lang="zh-Hans">Rainline</span></span></a><a class="bs-seg" href="#ch-11" data-nav="11" style="--seg: linear-gradient(90deg, #2e170b 0.00% 100.00%); --key: #926a3e"><span class="sr">11 <span lang="en">Detail</span><span lang="zh-Hans">材质细节</span></span></a><a class="bs-seg" href="#ch-12" data-nav="12" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="sr">12 <span lang="en">Start</span><span lang="zh-Hans">开始</span></span></a></nav>
+<div class="bar-lang" role="group" aria-label="Language"><button type="button" data-set-lang="en" aria-pressed="true">EN</button><button type="button" data-set-lang="zh" aria-pressed="false" lang="zh-Hans-x-ui">中文</button></div>
+</div></header>
+<svg class="defs" aria-hidden="true" focusable="false" width="0" height="0"><defs><marker id="ah-n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-n" d="M0 1 L9 5 L0 9 z"/></marker><marker id="as-n" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-n" d="M10 1 L1 5 L10 9 z"/></marker><marker id="ah-state" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-state" d="M0 1 L9 5 L0 9 z"/></marker><marker id="as-state" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-state" d="M10 1 L1 5 L10 9 z"/></marker><marker id="ah-signal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-signal" d="M0 1 L9 5 L0 9 z"/></marker><marker id="as-signal" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk-signal" d="M10 1 L1 5 L10 9 z"/></marker></defs></svg>
+<main class="page">
+<section class="hero" id="ch-01" data-ch="01">
+<figure class="plate"><img src="assets/cf-01-hero-2560.jpg" alt="CrystalFantasy: a light pillar inside a glass conservatory, rendered in game" data-alt-en="CrystalFantasy: a light pillar inside a glass conservatory, rendered in game" data-alt-zh="CrystalFantasy：玻璃温室中央的光柱，游戏内渲染" width="2560" height="1440" fetchpriority="high" decoding="async">
+<figcaption class="plate-hud">CrystalFantasy · <span lang="en">camera 01</span><span lang="zh-Hans">相机 01</span><br>3840 × 2160 · 2× SS · <span lang="en">in-game capture</span><span lang="zh-Hans">游戏内截图</span></figcaption></figure>
+<div class="wrap hero-title"><p class="eyebrow"><span lang="en">From assets to actual renders</span><span lang="zh-Hans">从资源到实际渲染</span></p><h1 class="wordmark">StudioMCP</h1></div>
+<div class="wrap intro">
+<div class="intro-main"><p lang="en" class="kicker">The final piece.</p><p lang="zh-Hans" class="kicker">最后一块拼图</p><p lang="en" class="lead">Connect asset preparation to actual in-game rendering, then bring the result back into the next decision.</p><p lang="zh-Hans" class="lead">让 Agent 从资源准备走到实际游戏渲染，并把结果带回下一次决策。</p></div>
+<div class="intro-side">
+<ul class="verbs"><li><span lang="en">Create</span><span lang="zh-Hans">创作</span></li><li><span lang="en">Diagnose</span><span lang="zh-Hans">诊断</span></li><li><span lang="en">Verify</span><span lang="zh-Hans">验证</span></li><li><span lang="en">Reproduce</span><span lang="zh-Hans">复现</span></li></ul>
+<dl class="meta"><div><dt><span lang="en">Release</span><span lang="zh-Hans">版本</span></dt><dd>StudioMCP 0.1.0 RC1</dd></div><div><dt><span lang="en">Infrastructure</span><span lang="zh-Hans">共享基建</span></dt><dd>0.1.0</dd></div><div><dt><span lang="en">Focus</span><span lang="zh-Hans">重点</span></dt><dd>Koikatsu Sunshine</dd></div><div><dt><span lang="en">Date</span><span lang="zh-Hans">日期</span></dt><dd>2026-10-28</dd></div></dl>
+<p lang="en" class="fine">User-supplied render examples from task reproductions on other devices and agents.</p><p lang="zh-Hans" class="fine">图片由用户提供：跨设备、跨 Agent 复现任务中的渲染成果。</p>
+</div></div>
+<nav class="wrap script" aria-label="Chapters"><span class="script-group" style="grid-column: 1 / 2"><span lang="en">Opening</span><span lang="zh-Hans">开篇</span></span><span class="script-group" style="grid-column: 2 / 7"><span lang="en">The loop</span><span lang="zh-Hans">闭环</span></span><span class="script-group" style="grid-column: 7 / 12"><span lang="en">Render evidence</span><span lang="zh-Hans">渲染证据</span></span><span class="script-group" style="grid-column: 12 / 13"><span lang="en">Start</span><span lang="zh-Hans">开始</span></span><a class="script-cell" href="#ch-01" style="--seg: linear-gradient(90deg, #2a497f 0.00% 100.00%); --key: #a5d4eb"><span class="script-bar"></span><span class="script-num">01</span><span class="script-name"><span lang="en">The final piece</span><span lang="zh-Hans">最后一块拼图</span></span></a><a class="script-cell" href="#ch-02" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">02</span><span class="script-name"><span lang="en">The creative loop</span><span lang="zh-Hans">创作闭环</span></span></a><a class="script-cell" href="#ch-03" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">03</span><span class="script-name"><span lang="en">Four purposes</span><span lang="zh-Hans">四种目标</span></span></a><a class="script-cell" href="#ch-04" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">04</span><span class="script-name"><span lang="en">Iteration</span><span lang="zh-Hans">迭代</span></span></a><a class="script-cell" href="#ch-05" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">05</span><span class="script-name"><span lang="en">Foundations</span><span lang="zh-Hans">共享基建</span></span></a><a class="script-cell" href="#ch-06" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">06</span><span class="script-name"><span lang="en">Portability</span><span lang="zh-Hans">跨 Agent 迁移</span></span></a><a class="script-cell" href="#ch-07" style="--seg: linear-gradient(90deg, #2a497f 0.00% 16.67%, #224977 16.67% 33.33%, #4d5ca9 33.33% 50.00%, #132654 50.00% 66.67%, #132e6c 66.67% 83.33%, #070f2e 83.33% 100.00%); --key: #c2d0ef"><span class="script-bar"></span><span class="script-num">07</span><span class="script-name"><span lang="en">CrystalFantasy</span><span lang="zh-Hans">CrystalFantasy</span></span></a><a class="script-cell" href="#ch-08" style="--seg: linear-gradient(90deg, #5c8749 0.00% 50.00%, #648768 50.00% 100.00%); --key: #f7f4ee"><span class="script-bar"></span><span class="script-num">08</span><span class="script-name"><span lang="en">Hypothesis</span><span lang="zh-Hans">假设与参数</span></span></a><a class="script-cell" href="#ch-09" style="--seg: linear-gradient(90deg, #648368 0.00% 33.33%, #4d6c51 33.33% 66.67%, #607f70 66.67% 100.00%); --key: #a9be9c"><span class="script-bar"></span><span class="script-num">09</span><span class="script-name"><span lang="en">The change</span><span lang="zh-Hans">改前改后</span></span></a><a class="script-cell" href="#ch-10" style="--seg: linear-gradient(90deg, #587783 0.00% 25.00%, #4d5151 25.00% 50.00%, #2a2a26 50.00% 75.00%, #223958 75.00% 100.00%); --key: #7dbcd0"><span class="script-bar"></span><span class="script-num">10</span><span class="script-name"><span lang="en">Rainline</span><span lang="zh-Hans">Rainline</span></span></a><a class="script-cell" href="#ch-11" style="--seg: linear-gradient(90deg, #2e170b 0.00% 100.00%); --key: #926a3e"><span class="script-bar"></span><span class="script-num">11</span><span class="script-name"><span lang="en">Detail</span><span lang="zh-Hans">材质细节</span></span></a><a class="script-cell" href="#ch-12" style="--seg: linear-gradient(90deg, #1a2430 0.00% 100.00%); --key: #3c4b5a"><span class="script-bar"></span><span class="script-num">12</span><span class="script-name"><span lang="en">Start</span><span lang="zh-Hans">开始</span></span></a><p class="script-note"><span lang="en">Colour script: each band is striped with the mean colour of the renders in that chapter.</span><span lang="zh-Hans">色彩脚本：每一段由该章渲染图的平均色组成。</span></p></nav>
+</section>
+<section class="ch ch-schematic" id="ch-02" data-ch="02"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">02</span><span class="eb-of">/ 12</span><span lang="en">Ecosystem</span><span lang="zh-Hans">生态</span></p><h2 lang="en" class="h2">Connect the creative loop.</h2><h2 lang="zh-Hans" class="h2">把工具连成创作闭环</h2><p lang="en" class="lead">StudioMCP gives an agent access to the real Studio state, edits, renders and persistence checks.</p><p lang="zh-Hans" class="lead">StudioMCP 让 Agent 能在实际 Studio 中读取、修改、出图并检查保存结果。</p></header><figure class="dg-figure"><div class="dg-scroll"><svg class="dg" viewBox="0 0 1150 620" role="img" aria-label="Ecosystem: assets, editor, actual Studio, renders and the agent feedback path"><g class="n "><rect x="40" y="36" width="400" height="96" rx="3"/><text lang="en" class="n-title" x="58" y="70"><tspan x="58" dy="0">RenderDocs + working method</tspan></text><text lang="zh-Hans" class="n-title" x="58" y="70"><tspan x="58" dy="0">RenderDocs + 工作方法</tspan></text><text lang="en" class="n-sub" x="58" y="95"><tspan x="58" dy="0">Shader meaning / versions / limits</tspan></text><text lang="zh-Hans" class="n-sub" x="58" y="95"><tspan x="58" dy="0">Shader 语义 / 版本 / 边界</tspan></text></g><g class="n signal"><rect x="540" y="36" width="240" height="96" rx="3"/><text lang="en" class="n-title" x="558" y="70"><tspan x="558" dy="0">Agent</tspan></text><text lang="zh-Hans" class="n-title" x="558" y="70"><tspan x="558" dy="0">Agent</tspan></text><text lang="en" class="n-sub" x="558" y="95"><tspan x="558" dy="0">Goal + evidence</tspan></text><text lang="zh-Hans" class="n-sub" x="558" y="95"><tspan x="558" dy="0">目标 + 证据</tspan></text></g><g class="n state"><rect x="540" y="196" width="240" height="104" rx="3"/><text lang="en" class="n-title" x="558" y="230"><tspan x="558" dy="0">StudioMCP</tspan></text><text lang="zh-Hans" class="n-title" x="558" y="230"><tspan x="558" dy="0">StudioMCP</tspan></text><text lang="en" class="n-sub" x="558" y="255"><tspan x="558" dy="0">Read / edit / render</tspan></text><text lang="zh-Hans" class="n-sub" x="558" y="255"><tspan x="558" dy="0">读取 / 编辑 / 出图</tspan></text></g><g class="n "><rect x="40" y="372" width="200" height="128" rx="3"/><text lang="en" class="n-title" x="58" y="406"><tspan x="58" dy="0">Prepare assets</tspan></text><text lang="zh-Hans" class="n-title" x="58" y="406"><tspan x="58" dy="0">资源准备</tspan></text><text lang="en" class="n-sub" x="58" y="431"><tspan x="58" dy="0">Blender MCP</tspan><tspan x="58" dy="19">Geometry / textures</tspan></text><text lang="zh-Hans" class="n-sub" x="58" y="431"><tspan x="58" dy="0">Blender MCP</tspan><tspan x="58" dy="19">模型 / 贴图 / 素材</tspan></text></g><g class="n "><rect x="290" y="372" width="200" height="128" rx="3"/><text lang="en" class="n-title" x="308" y="406"><tspan x="308" dy="0">Unity build</tspan></text><text lang="zh-Hans" class="n-title" x="308" y="406"><tspan x="308" dy="0">Unity 构建</tspan></text><text lang="en" class="n-sub" x="308" y="431"><tspan x="308" dy="0">Codex Bridge</tspan><tspan x="308" dy="19">Prefab / Bundle</tspan></text><text lang="zh-Hans" class="n-sub" x="308" y="431"><tspan x="308" dy="0">Codex Bridge</tspan><tspan x="308" dy="19">Prefab / Bundle</tspan><tspan x="308" dy="19">物品注册</tspan></text></g><g class="n core"><rect x="540" y="372" width="240" height="128" rx="3"/><text lang="en" class="n-title" x="558" y="406"><tspan x="558" dy="0">Actual Studio</tspan></text><text lang="zh-Hans" class="n-title" x="558" y="406"><tspan x="558" dy="0">实际 Studio</tspan></text><text lang="en" class="n-sub" x="558" y="431"><tspan x="558" dy="0">ME + Shader</tspan><tspan x="558" dy="19">Scene / material / camera</tspan></text><text lang="zh-Hans" class="n-sub" x="558" y="431"><tspan x="558" dy="0">ME + Shader</tspan><tspan x="558" dy="19">场景 / 材质 / 镜头</tspan></text></g><g class="n "><rect x="830" y="372" width="210" height="128" rx="3"/><text lang="en" class="n-title" x="848" y="406"><tspan x="848" dy="0">Renders</tspan></text><text lang="zh-Hans" class="n-title" x="848" y="406"><tspan x="848" dy="0">实际渲染输出</tspan></text><text lang="en" class="n-sub" x="848" y="431"><tspan x="848" dy="0">Screencap</tspan><tspan x="848" dy="19">Color / supported depth</tspan></text><text lang="zh-Hans" class="n-sub" x="848" y="431"><tspan x="848" dy="0">Screencap</tspan><tspan x="848" dy="19">图像 / 支持的深度</tspan></text></g><g class="n found"><rect x="540" y="540" width="500" height="60" rx="3"/><text lang="en" class="n-title" x="558" y="576"><tspan x="558" dy="0">TomRenderInfrastructure</tspan></text><text lang="zh-Hans" class="n-title" x="558" y="576"><tspan x="558" dy="0">TomRenderInfrastructure</tspan></text><text lang="en" class="n-sub" x="802" y="576"><tspan x="802" dy="0">Camera / Probe / SH / color</tspan></text><text lang="zh-Hans" class="n-sub" x="802" y="576"><tspan x="802" dy="0">相机 / Probe / SH / 场景颜色</tspan></text></g><path class="e  " d="M440 84 H540" marker-end="url(#ah-n)"/><path class="e state " d="M660 132 V196" marker-end="url(#ah-state)" marker-start="url(#as-state)"/><path class="e state " d="M660 300 V372" marker-end="url(#ah-state)" marker-start="url(#as-state)"/><text lang="en" class="e-label state" x="674" y="341" text-anchor="start"><tspan x="674" dy="0">Commands + state</tspan></text><text lang="zh-Hans" class="e-label state" x="674" y="341" text-anchor="start"><tspan x="674" dy="0">命令 + 状态</tspan></text><path class="e  " d="M240 436 H290" marker-end="url(#ah-n)"/><path class="e  " d="M490 436 H540" marker-end="url(#ah-n)"/><path class="e  " d="M780 436 H830" marker-end="url(#ah-n)"/><path class="e  " d="M660 540 V500" marker-end="url(#ah-n)"/><path class="e signal flow" d="M1040 436 H1110 V84 H780" marker-end="url(#ah-signal)"/><text lang="en" class="e-label signal" x="945" y="70" text-anchor="middle"><tspan x="945" dy="0">Results inform decisions</tspan></text><text lang="zh-Hans" class="e-label signal" x="945" y="70" text-anchor="middle"><tspan x="945" dy="0">结果返回决策</tspan></text><circle class="sock " cx="440" cy="84" r="3.6"/><circle class="sock " cx="540" cy="84" r="3.6"/><circle class="sock " cx="240" cy="436" r="3.6"/><circle class="sock " cx="290" cy="436" r="3.6"/><circle class="sock " cx="490" cy="436" r="3.6"/><circle class="sock " cx="540" cy="436" r="3.6"/><circle class="sock " cx="780" cy="436" r="3.6"/><circle class="sock " cx="830" cy="436" r="3.6"/><circle class="sock " cx="660" cy="540" r="3.6"/><circle class="sock " cx="660" cy="500" r="3.6"/><circle class="sock state" cx="660" cy="132" r="3.6"/><circle class="sock state" cx="660" cy="196" r="3.6"/><circle class="sock state" cx="660" cy="300" r="3.6"/><circle class="sock state" cx="660" cy="372" r="3.6"/><circle class="sock signal" cx="1040" cy="436" r="3.6"/><circle class="sock signal" cx="780" cy="84" r="3.6"/></svg></div><p class="dg-legend"><span class="k k-state"><span lang="en">Commands + state</span><span lang="zh-Hans">命令 + 状态</span></span><span class="k k-signal"><span lang="en">Decisions + feedback</span><span lang="zh-Hans">决策与反馈</span></span><span class="k k-n"><span lang="en">Build path</span><span lang="zh-Hans">构建路径</span></span></p></figure><p lang="en" class="caption">Editor tools bring assets into the game. Documentation supplies meaning. MCP brings state and results back to the agent.</p><p lang="zh-Hans" class="caption">资产经编辑器进入游戏；文档解释参数。MCP 将实际状态与渲染结果返回给 Agent。</p><div class="points c2"><div class="point"><h3 lang="en">Complete the feedback path</h3><h3 lang="zh-Hans">补齐反馈</h3><p lang="en">Read actual state and imagery after an action, then keep, adjust or restore it.</p><p lang="zh-Hans">操作后读取状态与实际图像，再决定保留、调整或恢复。</p></div><div class="point"><h3 lang="en">Keep clear responsibilities</h3><h3 lang="zh-Hans">保留边界</h3><p lang="en">ME and rendering modules keep their responsibilities. MCP is optional; scenes remain usable without an agent.</p><p lang="zh-Hans">ME 与渲染模块负责自身行为。MCP 是可选客户端；场景仍可继续手工编辑。</p></div></div></div></section>
+<section class="ch ch-schematic" id="ch-03" data-ch="03"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">03</span><span class="eb-of">/ 12</span><span lang="en">Purposes</span><span lang="zh-Hans">用途</span></p><h2 lang="en" class="h2">One interface. Four purposes.</h2><h2 lang="zh-Hans" class="h2">同一入口，四种用户目标</h2><p lang="en" class="lead">Creation, material work, developer regression and cross-agent reproduction reuse the same bounded tools.</p><p lang="zh-Hans" class="lead">创作、调参、开发回归与跨 Agent 复现，复用同一套受约束的状态和操作接口。</p></header><div class="matrix" role="table" aria-label="Four purposes"><div class="mx-row" role="row"><div class="mx-role" role="rowheader"><span lang="en">Scene creator</span><span lang="zh-Hans">场景创作者</span></div><div class="mx-step" role="cell"><span lang="en">Intent + assets</span><span lang="zh-Hans">意图与素材</span></div><div class="mx-step" role="cell"><span lang="en">Unity authoring</span><span lang="zh-Hans">Unity 构建</span></div><div class="mx-step mcp" role="cell"><span lang="en">MCP scene + camera</span><span lang="zh-Hans">MCP 布置镜头</span></div><div class="mx-step" role="cell"><span lang="en">Render + save</span><span lang="zh-Hans">成片与存档</span></div></div><div class="mx-row" role="row"><div class="mx-role" role="rowheader"><span lang="en">Material artist</span><span lang="zh-Hans">材质调优者</span></div><div class="mx-step" role="cell"><span lang="en">Read RenderDocs</span><span lang="zh-Hans">阅读 RenderDocs</span></div><div class="mx-step mcp" role="cell"><span lang="en">MCP inspection</span><span lang="zh-Hans">MCP 检查参数</span></div><div class="mx-step mcp" role="cell"><span lang="en">Targeted ME edit</span><span lang="zh-Hans">ME 定向修改</span></div><div class="mx-step" role="cell"><span lang="en">Compare + reload</span><span lang="zh-Hans">出图对照，独立复载</span></div></div><div class="mx-row" role="row"><div class="mx-role" role="rowheader"><span lang="en">Plugin developer</span><span lang="zh-Hans">插件开发者</span></div><div class="mx-step" role="cell"><span lang="en">Freeze candidate</span><span lang="zh-Hans">冻结候选版本</span></div><div class="mx-step mcp" role="cell"><span lang="en">MCP test scene</span><span lang="zh-Hans">MCP 控制测试场景</span></div><div class="mx-step mcp" role="cell"><span lang="en">State + image checks</span><span lang="zh-Hans">状态与输出比较</span></div><div class="mx-step" role="cell"><span lang="en">Regression record</span><span lang="zh-Hans">回归与兼容记录</span></div></div><div class="mx-row" role="row"><div class="mx-role" role="rowheader"><span lang="en">Another device / agent</span><span lang="zh-Hans">另一设备 / Agent</span></div><div class="mx-step" role="cell"><span lang="en">Match assets + versions</span><span lang="zh-Hans">配齐资产，匹配版本</span></div><div class="mx-step" role="cell"><span lang="en">Same docs + contract</span><span lang="zh-Hans">文档与操作契约</span></div><div class="mx-step mcp" role="cell"><span lang="en">Same MCP tools</span><span lang="zh-Hans">同一套 MCP 工具</span></div><div class="mx-step" role="cell"><span lang="en">Rerun + inspect</span><span lang="zh-Hans">重新执行，检查结果</span></div></div></div><p class="dg-legend"><span class="k k-mcp"><span lang="en">MCP touchpoint</span><span lang="zh-Hans">MCP 参与的步骤</span></span></p><aside class="note"><h3 lang="en">Choose the goal, then the operation</h3><h3 lang="zh-Hans">选择目标，再选择操作</h3><p lang="en">Take a task through to actual images and a retained scene. Use MCP for a whole scene, a material check, a set of views or an upgrade comparison.</p><p lang="zh-Hans">最后一块拼图让任务走到实际画面与可保留的场景。它既可支撑完整创作，也可只做一次材质检查、一组镜头或一轮升级验证。</p></aside></div></section>
+<section class="ch ch-schematic" id="ch-04" data-ch="04"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">04</span><span class="eb-of">/ 12</span><span lang="en">Iteration</span><span lang="zh-Hans">迭代</span></p><h2 lang="en" class="h2">Let the result guide the next edit.</h2><h2 lang="zh-Hans" class="h2">让结果参与下一次决策</h2><p lang="en" class="lead">An agent can work through documentation, state, bounded edits, actual rendering and independent reload checks.</p><p lang="zh-Hans" class="lead">Agent 的工作可以沿着文档、状态、有限修改、实际渲染和复载检查逐步推进。</p></header><figure class="dg-figure"><div class="dg-scroll"><svg class="dg" viewBox="0 0 1340 345" role="img" aria-label="Iteration loop: goal, docs and state, bounded edits, render, compare, save and reload"><g class="n "><rect x="24" y="112" width="184" height="124" rx="3"/><text class="n-num" x="42" y="140">01</text><text lang="en" class="n-title" x="42" y="168"><tspan x="42" dy="0">Define the goal</tspan></text><text lang="zh-Hans" class="n-title" x="42" y="168"><tspan x="42" dy="0">明确目标</tspan></text><text lang="en" class="n-sub" x="42" y="193"><tspan x="42" dy="0">Brief / references /</tspan><tspan x="42" dy="19">limits</tspan></text><text lang="zh-Hans" class="n-sub" x="42" y="193"><tspan x="42" dy="0">任务 / 参考 / 约束</tspan></text></g><g class="n "><rect x="236" y="112" width="184" height="124" rx="3"/><text class="n-num" x="254" y="140">02</text><text lang="en" class="n-title" x="254" y="168"><tspan x="254" dy="0">Read docs + state</tspan></text><text lang="zh-Hans" class="n-title" x="254" y="168"><tspan x="254" dy="0">文档与状态</tspan></text><text lang="en" class="n-sub" x="254" y="193"><tspan x="254" dy="0">RenderDocs + MCP</tspan><tspan x="254" dy="19">inspection</tspan></text><text lang="zh-Hans" class="n-sub" x="254" y="193"><tspan x="254" dy="0">RenderDocs</tspan><tspan x="254" dy="19">MCP 状态检查</tspan></text></g><g class="n state"><rect x="448" y="112" width="184" height="124" rx="3"/><text class="n-num" x="466" y="140">03</text><text lang="en" class="n-title" x="466" y="168"><tspan x="466" dy="0">Bounded edits</tspan></text><text lang="zh-Hans" class="n-title" x="466" y="168"><tspan x="466" dy="0">有边界的修改</tspan></text><text lang="en" class="n-sub" x="466" y="193"><tspan x="466" dy="0">ME / camera / light /</tspan><tspan x="466" dy="19">settings</tspan></text><text lang="zh-Hans" class="n-sub" x="466" y="193"><tspan x="466" dy="0">ME / 镜头 / 灯光 / 设置</tspan></text></g><g class="n state"><rect x="660" y="112" width="184" height="124" rx="3"/><text class="n-num" x="678" y="140">04</text><text lang="en" class="n-title" x="678" y="168"><tspan x="678" dy="0">Render in game</tspan></text><text lang="zh-Hans" class="n-title" x="678" y="168"><tspan x="678" dy="0">实际出图</tspan></text><text lang="en" class="n-sub" x="678" y="193"><tspan x="678" dy="0">Screencap +</tspan><tspan x="678" dy="19">readback</tspan></text><text lang="zh-Hans" class="n-sub" x="678" y="193"><tspan x="678" dy="0">Screencap + 读回</tspan></text></g><g class="n "><rect x="872" y="112" width="184" height="124" rx="3"/><text class="n-num" x="890" y="140">05</text><text lang="en" class="n-title" x="890" y="168"><tspan x="890" dy="0">Compare + explain</tspan></text><text lang="zh-Hans" class="n-title" x="890" y="168"><tspan x="890" dy="0">比较与解释</tspan></text><text lang="en" class="n-sub" x="890" y="193"><tspan x="890" dy="0">Visual goal + state</tspan><tspan x="890" dy="19">evidence</tspan></text><text lang="zh-Hans" class="n-sub" x="890" y="193"><tspan x="890" dy="0">目标效果</tspan><tspan x="890" dy="19">状态证据</tspan></text></g><g class="n "><rect x="1132" y="112" width="184" height="124" rx="3"/><text class="n-num" x="1150" y="140">06</text><text lang="en" class="n-title" x="1150" y="168"><tspan x="1150" dy="0">Save + reload</tspan></text><text lang="zh-Hans" class="n-title" x="1150" y="168"><tspan x="1150" dy="0">保存与独立复载</tspan></text><text lang="en" class="n-sub" x="1150" y="193"><tspan x="1150" dy="0">Verify retained state</tspan></text><text lang="zh-Hans" class="n-sub" x="1150" y="193"><tspan x="1150" dy="0">检查结果能否保留</tspan></text></g><path class="e  " d="M208 174 H236" marker-end="url(#ah-n)"/><circle class="sock " cx="208" cy="174" r="3.6"/><circle class="sock " cx="236" cy="174" r="3.6"/><path class="e  " d="M420 174 H448" marker-end="url(#ah-n)"/><circle class="sock " cx="420" cy="174" r="3.6"/><circle class="sock " cx="448" cy="174" r="3.6"/><path class="e  " d="M632 174 H660" marker-end="url(#ah-n)"/><circle class="sock " cx="632" cy="174" r="3.6"/><circle class="sock " cx="660" cy="174" r="3.6"/><path class="e  " d="M844 174 H872" marker-end="url(#ah-n)"/><circle class="sock " cx="844" cy="174" r="3.6"/><circle class="sock " cx="872" cy="174" r="3.6"/><path class="e signal " d="M1056 174 H1132" marker-end="url(#ah-signal)"/><circle class="sock signal" cx="1056" cy="174" r="3.6"/><circle class="sock signal" cx="1132" cy="174" r="3.6"/><text lang="en" class="e-label signal" x="1094" y="160" text-anchor="middle"><tspan x="1094" dy="0">Goal met</tspan></text><text lang="zh-Hans" class="e-label signal" x="1094" y="160" text-anchor="middle"><tspan x="1094" dy="0">符合目标</tspan></text><path class="e signal flow" d="M964 112 C964 44 540 44 540 112" marker-end="url(#ah-signal)"/><circle class="sock signal" cx="964" cy="112" r="3.6"/><circle class="sock signal" cx="540" cy="112" r="3.6"/><text lang="en" class="e-label signal" x="752" y="34" text-anchor="middle"><tspan x="752" dy="0">Iterate: one focused hypothesis</tspan></text><text lang="zh-Hans" class="e-label signal" x="752" y="34" text-anchor="middle"><tspan x="752" dy="0">继续调整：每次只检验一组假设</tspan></text><path class="e  dash" d="M1224 236 C1224 312 328 312 328 236" marker-end="url(#ah-n)"/><circle class="sock " cx="1224" cy="236" r="3.6"/><circle class="sock " cx="328" cy="236" r="3.6"/><text lang="en" class="e-label " x="776" y="334" text-anchor="middle"><tspan x="776" dy="0">Reload mismatch: inspect state, dependencies and persistence</tspan></text><text lang="zh-Hans" class="e-label " x="776" y="334" text-anchor="middle"><tspan x="776" dy="0">复载不符：重新检查状态、依赖与持久化</tspan></text></svg></div><p class="dg-legend"><span class="k k-state"><span lang="en">Commands + state</span><span lang="zh-Hans">命令 + 状态</span></span><span class="k k-signal"><span lang="en">Decisions + feedback</span><span lang="zh-Hans">决策与反馈</span></span><span class="k k-n"><span lang="en">Build path</span><span lang="zh-Hans">构建路径</span></span></p></figure><p lang="en" class="caption">Each comparison asks a concrete question: material appearance, framing, resource readiness or restoration after saving.</p><p lang="zh-Hans" class="caption">每轮比较围绕一个明确目标：材质是否符合预期、镜头是否合适、依赖是否就绪、保存后能否恢复。</p><aside class="note"><h3 lang="en">From an image to a usable scene</h3><h3 lang="zh-Hans">从图像走向可继续工作的场景</h3><p lang="en">Images show appearance. State explains the configuration. Independent loading checks whether the result was retained.</p><p lang="zh-Hans">图像说明可见效果；状态读回解释当前配置；独立加载检查结果是否真正保留。三者各有作用。</p></aside></div></section>
+<section class="ch ch-schematic" id="ch-05" data-ch="05"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">05</span><span class="eb-of">/ 12</span><span lang="en">Shared foundations</span><span lang="zh-Hans">共享基建</span></p><h2 lang="en" class="h2">Shared foundations. Wider reach.</h2><h2 lang="zh-Hans" class="h2">共享基建，放大每个模块的价值</h2><p lang="en" class="lead">The runtime executes correctly; the client makes its capabilities usable, observable and composable.</p><p lang="zh-Hans" class="lead">底层负责正确执行，上层负责调用、观察和组织工作流。</p></header><figure class="dg-figure"><div class="dg-scroll"><svg class="dg" viewBox="0 0 1200 560" role="img" aria-label="Shared rendering foundations under StudioMCP"><g class="n found"><rect x="40" y="24" width="1120" height="92" rx="3"/><text lang="en" class="n-title big" x="58" y="64"><tspan x="58" dy="0">TomRenderInfrastructure</tspan></text><text lang="zh-Hans" class="n-title big" x="58" y="64"><tspan x="58" dy="0">TomRenderInfrastructure</tspan></text><text lang="en" class="n-sub" x="58" y="94"><tspan x="58" dy="0">Explicit camera scopes, resource lifetime and module coordination</tspan></text><text lang="zh-Hans" class="n-sub" x="58" y="94"><tspan x="58" dy="0">明确相机上下文、资源生命周期与模块协作</tspan></text></g><g class="n "><rect x="40" y="176" width="344" height="116" rx="3"/><text lang="en" class="n-title" x="58" y="210"><tspan x="58" dy="0">Shared Core</tspan></text><text lang="zh-Hans" class="n-title" x="58" y="210"><tspan x="58" dy="0">共享 Core</tspan></text><text lang="en" class="n-sub" x="58" y="235"><tspan x="58" dy="0">Callback order / ownership /</tspan><tspan x="58" dy="19">color route</tspan></text><text lang="zh-Hans" class="n-sub" x="58" y="235"><tspan x="58" dy="0">回调次序 / 资源归属 /</tspan><tspan x="58" dy="19">颜色路由</tspan></text></g><path class="e  " d="M212 116 V176" marker-end="url(#ah-n)"/><circle class="sock " cx="212" cy="116" r="3.6"/><circle class="sock " cx="212" cy="176" r="3.6"/><circle class="sock " cx="212" cy="292" r="3.6"/><g class="n "><rect x="428" y="176" width="344" height="116" rx="3"/><text lang="en" class="n-title" x="446" y="210"><tspan x="446" dy="0">Probe / SH</tspan></text><text lang="zh-Hans" class="n-title" x="446" y="210"><tspan x="446" dy="0">Probe / SH</tspan></text><text lang="en" class="n-sub" x="446" y="235"><tspan x="446" dy="0">Capture state / lighting</tspan><tspan x="446" dy="19">resources</tspan></text><text lang="zh-Hans" class="n-sub" x="446" y="235"><tspan x="446" dy="0">捕获进度 / 光照资源</tspan></text></g><path class="e  " d="M600 116 V176" marker-end="url(#ah-n)"/><circle class="sock " cx="600" cy="116" r="3.6"/><circle class="sock " cx="600" cy="176" r="3.6"/><circle class="sock " cx="600" cy="292" r="3.6"/><g class="n "><rect x="816" y="176" width="344" height="116" rx="3"/><text lang="en" class="n-title" x="834" y="210"><tspan x="834" dy="0">Rendering helpers</tspan></text><text lang="zh-Hans" class="n-title" x="834" y="210"><tspan x="834" dy="0">渲染辅助服务</tspan></text><text lang="en" class="n-sub" x="834" y="235"><tspan x="834" dy="0">Scene color / area lights /</tspan><tspan x="834" dy="19">bounds</tspan></text><text lang="zh-Hans" class="n-sub" x="834" y="235"><tspan x="834" dy="0">场景颜色 / 区域光 / 边界</tspan></text></g><path class="e  " d="M988 116 V176" marker-end="url(#ah-n)"/><circle class="sock " cx="988" cy="116" r="3.6"/><circle class="sock " cx="988" cy="176" r="3.6"/><circle class="sock " cx="988" cy="292" r="3.6"/><path class="e  " d="M212 292 V324 H988 V292 M600 292 V352" marker-end="url(#ah-n)"/><circle class="sock " cx="600" cy="352" r="3.6"/><g class="n signal"><rect x="290" y="352" width="620" height="84" rx="3"/><text lang="en" class="n-title" x="308" y="386"><tspan x="308" dy="0">Preserved public facades + identities</tspan></text><text lang="zh-Hans" class="n-title" x="308" y="386"><tspan x="308" dy="0">既有公开接口与数据身份</tspan></text><text lang="en" class="n-sub" x="308" y="411"><tspan x="308" dy="0">MCP calls APIs; modules own rendering and persistence</tspan></text><text lang="zh-Hans" class="n-sub" x="308" y="411"><tspan x="308" dy="0">MCP 调用接口；模块继续负责自身算法与持久化</tspan></text></g><path class="e state " d="M600 436 V470" marker-end="url(#ah-state)"/><circle class="sock state" cx="600" cy="436" r="3.6"/><circle class="sock state" cx="600" cy="470" r="3.6"/><g class="n state"><rect x="390" y="470" width="420" height="72" rx="3"/><text lang="en" class="n-title" x="408" y="504"><tspan x="408" dy="0">StudioMCP</tspan></text><text lang="zh-Hans" class="n-title" x="408" y="504"><tspan x="408" dy="0">StudioMCP</tspan></text><text lang="en" class="n-sub" x="408" y="529"><tspan x="408" dy="0">Creation, diagnosis and verification</tspan></text><text lang="zh-Hans" class="n-sub" x="408" y="529"><tspan x="408" dy="0">让能力可以被创作、诊断与验证流程调用</tspan></text></g></svg></div><p class="dg-legend"><span class="k k-state"><span lang="en">Commands + state</span><span lang="zh-Hans">命令 + 状态</span></span><span class="k k-signal"><span lang="en">Decisions + feedback</span><span lang="zh-Hans">决策与反馈</span></span><span class="k k-n"><span lang="en">Build path</span><span lang="zh-Hans">构建路径</span></span></p></figure><p lang="en" class="caption">Shared camera scope, ownership and color routing define module boundaries. MCP brings public capabilities into authoring and verification.</p><p lang="zh-Hans" class="caption">公共相机上下文、资源归属与颜色路由，让模块协作有明确边界。MCP 再把公开能力带入创作和验证任务。</p><div class="points c3"><div class="point"><h3 lang="en">Compose</h3><h3 lang="zh-Hans">更易组合</h3><p lang="en">Reuse runtime foundations across shaders and scenes.</p><p lang="zh-Hans">不同 Shader 和场景复用底层能力。</p></div><div class="point"><h3 lang="en">Explain</h3><h3 lang="zh-Hans">更易解释</h3><p lang="en">Explain image differences with state and capture progress.</p><p lang="zh-Hans">把画面差异与状态、捕获进度对应。</p></div><div class="point"><h3 lang="en">Recheck</h3><h3 lang="zh-Hans">更易回归</h3><p lang="en">Repeat checks with the same scene and camera views.</p><p lang="zh-Hans">用相同场景与镜头检查版本变化。</p></div></div></div></section>
+<section class="ch ch-schematic" id="ch-06" data-ch="06"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">06</span><span class="eb-of">/ 12</span><span lang="en">Portability</span><span lang="zh-Hans">可迁移性</span></p><h2 lang="en" class="h2">A workflow that travels.</h2><h2 lang="zh-Hans" class="h2">工作方法可以跨 Agent 迁移</h2><p lang="en" class="lead">Reuse the brief, documentation, asset conventions and MCP contract across compatible agent clients.</p><p lang="zh-Hans" class="lead">复用任务说明、文档、资产约定与 MCP 契约，减少对某段对话或单个执行者的依赖。</p></header><figure class="dg-figure"><div class="dg-scroll"><svg class="dg" viewBox="0 0 1200 476" role="img" aria-label="The same task package and MCP contract on two devices and agents"><g class="n signal"><rect x="290" y="20" width="620" height="88" rx="3"/><text lang="en" class="n-title" x="308" y="54"><tspan x="308" dy="0">A portable task package</tspan></text><text lang="zh-Hans" class="n-title" x="308" y="54"><tspan x="308" dy="0">可迁移的任务包</tspan></text><text lang="en" class="n-sub" x="308" y="79"><tspan x="308" dy="0">Goal + matched assets/versions + RenderDocs + skill</tspan></text><text lang="zh-Hans" class="n-sub" x="308" y="79"><tspan x="308" dy="0">任务目标 + 匹配资产/版本 + RenderDocs + Skill</tspan></text></g><path class="e  " d="M600 108 V136 H330 V164" marker-end="url(#ah-n)"/><path class="e  " d="M600 136 H870 V164" marker-end="url(#ah-n)"/><circle class="sock " cx="600" cy="108" r="3.6"/><circle class="sock " cx="330" cy="164" r="3.6"/><circle class="sock " cx="870" cy="164" r="3.6"/><g class="n "><rect x="110" y="164" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="128" y="198"><tspan x="128" dy="0">Device A / Agent A</tspan></text><text lang="zh-Hans" class="n-title" x="128" y="198"><tspan x="128" dy="0">设备 A / Agent A</tspan></text><text lang="en" class="n-sub" x="128" y="223"><tspan x="128" dy="0">Read docs; choose operations</tspan></text><text lang="zh-Hans" class="n-sub" x="128" y="223"><tspan x="128" dy="0">理解文档，选择操作</tspan></text></g><g class="n state"><rect x="110" y="272" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="128" y="306"><tspan x="128" dy="0">The same MCP tool contract</tspan></text><text lang="zh-Hans" class="n-title" x="128" y="306"><tspan x="128" dy="0">同一 MCP 工具契约</tspan></text><text lang="en" class="n-sub" x="128" y="331"><tspan x="128" dy="0">Inspect / edit / render / save</tspan></text><text lang="zh-Hans" class="n-sub" x="128" y="331"><tspan x="128" dy="0">检查 / 修改 / 出图 / 保存</tspan></text></g><g class="n "><rect x="110" y="380" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="128" y="414"><tspan x="128" dy="0">Inspectable result A</tspan></text><text lang="zh-Hans" class="n-title" x="128" y="414"><tspan x="128" dy="0">可供检查的成果 A</tspan></text><text lang="en" class="n-sub" x="128" y="439"><tspan x="128" dy="0">Renders and associated scene state</tspan></text><text lang="zh-Hans" class="n-sub" x="128" y="439"><tspan x="128" dy="0">渲染图与对应场景状态</tspan></text></g><path class="e state " d="M330 240 V272" marker-end="url(#ah-state)"/><path class="e state " d="M330 348 V380" marker-end="url(#ah-state)"/><circle class="sock state" cx="330" cy="240" r="3.6"/><circle class="sock state" cx="330" cy="272" r="3.6"/><circle class="sock state" cx="330" cy="348" r="3.6"/><circle class="sock state" cx="330" cy="380" r="3.6"/><g class="n "><rect x="650" y="164" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="668" y="198"><tspan x="668" dy="0">Device B / Agent B</tspan></text><text lang="zh-Hans" class="n-title" x="668" y="198"><tspan x="668" dy="0">设备 B / Agent B</tspan></text><text lang="en" class="n-sub" x="668" y="223"><tspan x="668" dy="0">Read docs; choose operations</tspan></text><text lang="zh-Hans" class="n-sub" x="668" y="223"><tspan x="668" dy="0">理解文档，选择操作</tspan></text></g><g class="n state"><rect x="650" y="272" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="668" y="306"><tspan x="668" dy="0">The same MCP tool contract</tspan></text><text lang="zh-Hans" class="n-title" x="668" y="306"><tspan x="668" dy="0">同一 MCP 工具契约</tspan></text><text lang="en" class="n-sub" x="668" y="331"><tspan x="668" dy="0">Inspect / edit / render / save</tspan></text><text lang="zh-Hans" class="n-sub" x="668" y="331"><tspan x="668" dy="0">检查 / 修改 / 出图 / 保存</tspan></text></g><g class="n "><rect x="650" y="380" width="440" height="76" rx="3"/><text lang="en" class="n-title" x="668" y="414"><tspan x="668" dy="0">Inspectable result B</tspan></text><text lang="zh-Hans" class="n-title" x="668" y="414"><tspan x="668" dy="0">可供检查的成果 B</tspan></text><text lang="en" class="n-sub" x="668" y="439"><tspan x="668" dy="0">Renders and associated scene state</tspan></text><text lang="zh-Hans" class="n-sub" x="668" y="439"><tspan x="668" dy="0">渲染图与对应场景状态</tspan></text></g><path class="e state " d="M870 240 V272" marker-end="url(#ah-state)"/><path class="e state " d="M870 348 V380" marker-end="url(#ah-state)"/><circle class="sock state" cx="870" cy="240" r="3.6"/><circle class="sock state" cx="870" cy="272" r="3.6"/><circle class="sock state" cx="870" cy="348" r="3.6"/><circle class="sock state" cx="870" cy="380" r="3.6"/><path class="e signal dash" d="M550 418 H650"/></svg></div><p class="dg-legend"><span class="k k-state"><span lang="en">Commands + state</span><span lang="zh-Hans">命令 + 状态</span></span><span class="k k-signal"><span lang="en">Decisions + feedback</span><span lang="zh-Hans">决策与反馈</span></span><span class="k k-n"><span lang="en">Build path</span><span lang="zh-Hans">构建路径</span></span></p></figure><p lang="en" class="caption">The user supplied these renders as reproductions of the same tasks on another device with other agents: practical examples of workflow portability.</p><p lang="zh-Hans" class="caption">本展示的渲染图由用户提供，来自另一设备、其他 Agent 对相同任务的复现。它们展示了工作流可迁移的实际案例。</p><aside class="note"><h3 lang="en">The contract and method are portable</h3><h3 lang="zh-Hans">可迁移的是契约与方法</h3><p lang="en">Reproduction needs compatible clients, versions and assets. These are user-reported cases; hardware, model and execution logs were not supplied.</p><p lang="zh-Hans">复现需要兼容客户端、匹配版本与资源。这里按用户提供的复现案例记录；设备、模型与运行日志未随图片提供。</p></aside></div></section>
+<section class="ch ch-evidence" id="ch-07" data-ch="07"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">07</span><span class="eb-of">/ 12</span><span lang="en">Cross-agent render example</span><span lang="zh-Hans">跨 Agent 渲染案例</span></p><h2 lang="en" class="h2">CrystalFantasy</h2><h2 lang="zh-Hans" class="h2">CrystalFantasy</h2><p lang="en" class="lead">Six views of one scene: materials, composition and camera work.</p><p lang="zh-Hans" class="lead">六个视角，呈现场景创作与镜头组织的成果。</p></header><div class="viewer" data-viewer><figure class="stage"><img class="stage-img" src="assets/cf-01-hero.jpg" alt="CrystalFantasy, camera 01 (hero), rendered in game" data-alt-en="CrystalFantasy, camera 01 (hero), rendered in game" data-alt-zh="CrystalFantasy，相机 01（hero），游戏内渲染" width="1920" height="1080" loading="lazy" decoding="async"><figcaption class="stage-hud"><span data-hud><span lang="en">Cam 01 · hero</span><span lang="zh-Hans">相机 01 · hero</span></span><span class="hud-meta"><span lang="en">3840 × 2160 · 2× SS · in-game capture</span><span lang="zh-Hans">3840 × 2160 · 2× SS · 游戏内截图</span></span></figcaption></figure><div class="strip c6" role="tablist" aria-label="CrystalFantasy views"><button type="button" role="tab" aria-selected="true" tabindex="0" data-src="assets/cf-01-hero.jpg" data-alt-en="CrystalFantasy, camera 01 (hero), rendered in game" data-alt-zh="CrystalFantasy，相机 01（hero），游戏内渲染"><img src="assets/cf-01-hero-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 01 · hero</span><span lang="zh-Hans">相机 01 · hero</span></span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/cf-02-hanging-garden.jpg" data-alt-en="CrystalFantasy, camera 02 (hanging garden), rendered in game" data-alt-zh="CrystalFantasy，相机 02（hanging garden），游戏内渲染"><img src="assets/cf-02-hanging-garden-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 02 · hanging garden</span><span lang="zh-Hans">相机 02 · hanging garden</span></span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/cf-03-vitrine.jpg" data-alt-en="CrystalFantasy, camera 03 (vitrine), rendered in game" data-alt-zh="CrystalFantasy，相机 03（vitrine），游戏内渲染"><img src="assets/cf-03-vitrine-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 03 · vitrine</span><span lang="zh-Hans">相机 03 · vitrine</span></span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/cf-04-etagere.jpg" data-alt-en="CrystalFantasy, camera 04 (etagere), rendered in game" data-alt-zh="CrystalFantasy，相机 04（etagere），游戏内渲染"><img src="assets/cf-04-etagere-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 04 · etagere</span><span lang="zh-Hans">相机 04 · etagere</span></span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/cf-05-orb-garden.jpg" data-alt-en="CrystalFantasy, camera 05 (orb garden), rendered in game" data-alt-zh="CrystalFantasy，相机 05（orb garden），游戏内渲染"><img src="assets/cf-05-orb-garden-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 05 · orb garden</span><span lang="zh-Hans">相机 05 · orb garden</span></span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/cf-06-dome.jpg" data-alt-en="CrystalFantasy, camera 06 (dome), rendered in game" data-alt-zh="CrystalFantasy，相机 06（dome），游戏内渲染"><img src="assets/cf-06-dome-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">Cam 06 · dome</span><span lang="zh-Hans">相机 06 · dome</span></span></button></div></div><div class="points c3"><div class="point"><h3 lang="en">Scene language</h3><h3 lang="zh-Hans">场景语言</h3><p lang="en">Structure, emission and planting establish depth, checked in game.</p><p lang="zh-Hans">用结构、发光和植物建立空间层次，再从实际渲染检查表达。</p></div><div class="point"><h3 lang="en">View organization</h3><h3 lang="zh-Hans">镜头组织</h3><p lang="en">Use all six views to check the subject, background and dome.</p><p lang="zh-Hans">保留六个视角，检查主体、远景与穹顶在同一场景中的关系。</p></div><div class="point"><h3 lang="en">Keep iterating</h3><h3 lang="zh-Hans">继续迭代</h3><p lang="en">Choose the next edit from images and state; retain the scene.</p><p lang="zh-Hans">结合图像与状态提出下一轮修改，保存场景后继续创作。</p></div></div></div></section>
+<section class="ch ch-evidence" id="ch-08" data-ch="08"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">08</span><span class="eb-of">/ 12</span><span lang="en">Material exploration</span><span lang="zh-Hans">材质探索</span></p><h2 lang="en" class="h2">Greenhouse: test a hypothesis.</h2><h2 lang="zh-Hans" class="h2">温室：围绕假设探索参数</h2><p lang="en" class="lead">Four parameter variants in two fixed views guide the next adjustment.</p><p lang="zh-Hans" class="lead">同一组对照视角呈现四套参数结果，让差异成为下一次调整的依据。</p></header><div class="rigs"><div class="rig"><div class="rig-head"><h3 lang="en">Floor and jade structure</h3><h3 lang="zh-Hans">地面与玉色结构</h3><p lang="en" class="caption">The v3 / r1 / r2 / r3 variants in one fixed view.</p><p lang="zh-Hans" class="caption">同一固定视角下的 v3 / r1 / r2 / r3 对照。</p></div><div class="viewer" data-viewer><figure class="stage"><img class="stage-img" src="assets/ga-stair-v3.jpg" alt="Greenhouse stair, variant v3: walls RI 0.3 · jade refraction on" data-alt-en="Greenhouse stair, variant v3: walls RI 0.3 · jade refraction on" data-alt-zh="温室楼梯，变体 v3：墙面 RI 0.3 · 玉色玻璃折射开" width="1600" height="900" loading="lazy" decoding="async"><figcaption class="stage-hud"><span data-hud><span lang="en">v3</span><span lang="zh-Hans">v3</span></span><span class="hud-meta"><span lang="en">1600 × 900 · test capture</span><span lang="zh-Hans">1600 × 900 · 测试截图</span></span></figcaption></figure><div class="strip c4" role="tablist" aria-label="Floor and jade variants"><button type="button" role="tab" aria-selected="true" tabindex="0" data-src="assets/ga-stair-v3.jpg" data-alt-en="Greenhouse stair, variant v3: walls RI 0.3 · jade refraction on" data-alt-zh="温室楼梯，变体 v3：墙面 RI 0.3 · 玉色玻璃折射开"><img src="assets/ga-stair-v3-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">v3</span><span lang="zh-Hans">v3</span></span><span lang="en" class="t-param">walls RI 0.3 · jade refraction on</span><span lang="zh-Hans" class="t-param">墙面 RI 0.3 · 玉色玻璃折射开</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-stair-r1.jpg" data-alt-en="Greenhouse stair, variant r1: walls RI 1.0 · jade refraction off" data-alt-zh="温室楼梯，变体 r1：墙面 RI 1.0 · 玉色玻璃折射关"><img src="assets/ga-stair-r1-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r1</span><span lang="zh-Hans">r1</span></span><span lang="en" class="t-param">walls RI 1.0 · jade refraction off</span><span lang="zh-Hans" class="t-param">墙面 RI 1.0 · 玉色玻璃折射关</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-stair-r2.jpg" data-alt-en="Greenhouse stair, variant r2: walls RI 2.0 · roof RI 0.6 · jade RI 1.6" data-alt-zh="温室楼梯，变体 r2：墙面 RI 2.0 · 屋顶 RI 0.6 · 玉色 RI 1.6"><img src="assets/ga-stair-r2-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r2</span><span lang="zh-Hans">r2</span></span><span lang="en" class="t-param">walls RI 2.0 · roof RI 0.6 · jade RI 1.6</span><span lang="zh-Hans" class="t-param">墙面 RI 2.0 · 屋顶 RI 0.6 · 玉色 RI 1.6</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-stair-r3.jpg" data-alt-en="Greenhouse stair, variant r3: walls IOR 1.8, RI 1.4 · jade IOR 1.75, RI 1.4" data-alt-zh="温室楼梯，变体 r3：墙面 IOR 1.8、RI 1.4 · 玉色 IOR 1.75、RI 1.4"><img src="assets/ga-stair-r3-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r3</span><span lang="zh-Hans">r3</span></span><span lang="en" class="t-param">walls IOR 1.8, RI 1.4 · jade IOR 1.75, RI 1.4</span><span lang="zh-Hans" class="t-param">墙面 IOR 1.8、RI 1.4 · 玉色 IOR 1.75、RI 1.4</span></button></div></div></div><div class="rig"><div class="rig-head"><h3 lang="en">Glass and hanging garden</h3><h3 lang="zh-Hans">玻璃与悬挂花园</h3><p lang="en" class="caption">Reflection, transmission and background.</p><p lang="zh-Hans" class="caption">观察透射、反射和背景关系的变化。</p></div><div class="viewer" data-viewer><figure class="stage"><img class="stage-img" src="assets/ga-third-v3.jpg" alt="Greenhouse third floor, variant v3: walls RI 0.3 · jade refraction on" data-alt-en="Greenhouse third floor, variant v3: walls RI 0.3 · jade refraction on" data-alt-zh="温室三层，变体 v3：墙面 RI 0.3 · 玉色玻璃折射开" width="1600" height="900" loading="lazy" decoding="async"><figcaption class="stage-hud"><span data-hud><span lang="en">v3</span><span lang="zh-Hans">v3</span></span><span class="hud-meta"><span lang="en">1600 × 900 · test capture</span><span lang="zh-Hans">1600 × 900 · 测试截图</span></span></figcaption></figure><div class="strip c4" role="tablist" aria-label="Glass variants"><button type="button" role="tab" aria-selected="true" tabindex="0" data-src="assets/ga-third-v3.jpg" data-alt-en="Greenhouse third floor, variant v3: walls RI 0.3 · jade refraction on" data-alt-zh="温室三层，变体 v3：墙面 RI 0.3 · 玉色玻璃折射开"><img src="assets/ga-third-v3-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">v3</span><span lang="zh-Hans">v3</span></span><span lang="en" class="t-param">walls RI 0.3 · jade refraction on</span><span lang="zh-Hans" class="t-param">墙面 RI 0.3 · 玉色玻璃折射开</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-third-r1.jpg" data-alt-en="Greenhouse third floor, variant r1: walls RI 1.0 · jade refraction off" data-alt-zh="温室三层，变体 r1：墙面 RI 1.0 · 玉色玻璃折射关"><img src="assets/ga-third-r1-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r1</span><span lang="zh-Hans">r1</span></span><span lang="en" class="t-param">walls RI 1.0 · jade refraction off</span><span lang="zh-Hans" class="t-param">墙面 RI 1.0 · 玉色玻璃折射关</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-third-r2.jpg" data-alt-en="Greenhouse third floor, variant r2: walls RI 2.0 · roof RI 0.6 · jade RI 1.6" data-alt-zh="温室三层，变体 r2：墙面 RI 2.0 · 屋顶 RI 0.6 · 玉色 RI 1.6"><img src="assets/ga-third-r2-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r2</span><span lang="zh-Hans">r2</span></span><span lang="en" class="t-param">walls RI 2.0 · roof RI 0.6 · jade RI 1.6</span><span lang="zh-Hans" class="t-param">墙面 RI 2.0 · 屋顶 RI 0.6 · 玉色 RI 1.6</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-src="assets/ga-third-r3.jpg" data-alt-en="Greenhouse third floor, variant r3: walls IOR 1.8, RI 1.4 · jade IOR 1.75, RI 1.4" data-alt-zh="温室三层，变体 r3：墙面 IOR 1.8、RI 1.4 · 玉色 IOR 1.75、RI 1.4"><img src="assets/ga-third-r3-thumb.jpg" alt="" width="480" height="270" loading="lazy" decoding="async"><span class="t-label"><span lang="en">r3</span><span lang="zh-Hans">r3</span></span><span lang="en" class="t-param">walls IOR 1.8, RI 1.4 · jade IOR 1.75, RI 1.4</span><span lang="zh-Hans" class="t-param">墙面 IOR 1.8、RI 1.4 · 玉色 IOR 1.75、RI 1.4</span></button></div></div></div></div><ol class="seq"><li><span class="seq-num">01</span><h3 lang="en">Read the contract</h3><h3 lang="zh-Hans">先读语义</h3><p lang="en">Use matching shader RenderDocs to interpret RI / IOR and other values.</p><p lang="zh-Hans">先读匹配版本的 Shader 文档，确认 RI / IOR 等参数的含义及适用范围。</p></li><li><span class="seq-num">02</span><h3 lang="en">Bound the edit</h3><h3 lang="zh-Hans">再限定修改</h3><p lang="en">Keep the camera fixed. Edit one related parameter group and retain its values.</p><p lang="zh-Hans">固定镜头，只改变一组相关参数，并保留修改值与对照图。</p></li><li><span class="seq-num">03</span><h3 lang="en">Read the result</h3><h3 lang="zh-Hans">最后看结果</h3><p lang="en">Read back state and compare renders before choosing the next edit.</p><p lang="zh-Hans">读回当前状态并比较实际渲染，再决定是否保留修改或继续调整。</p></li></ol><p lang="en" class="caption">MCP reads and sets values. Shader documentation and actual renders guide the choice of those values.</p><p lang="zh-Hans" class="caption">MCP 负责读取与设置；参数如何组成目标效果，由 Shader 文档和实际渲染共同帮助判断。</p></div></section>
+<section class="ch ch-evidence" id="ch-09" data-ch="09"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">09</span><span class="eb-of">/ 12</span><span lang="en">Iteration example</span><span lang="zh-Hans">迭代案例</span></p><h2 lang="en" class="h2">Greenhouse: inspect the change.</h2><h2 lang="zh-Hans" class="h2">温室：把变化放回真实画面</h2><p lang="en" class="lead">Before and after across three views, in the original framing.</p><p lang="zh-Hans" class="lead">三个视角的改前 / 改后对照，保留原始构图。</p></header><div class="cmp" data-compare><div class="cmp-stage"><img class="cmp-a" src="assets/ga-third-v3.jpg" alt="Greenhouse camera 4, before the glass change" data-alt-en="Greenhouse camera 4, before the glass change" data-alt-zh="温室相机 4，改前" width="1600" height="900" loading="lazy" decoding="async"><img class="cmp-b" src="assets/ga-third-r3.jpg" alt="Greenhouse camera 4, after the glass change" data-alt-en="Greenhouse camera 4, after the glass change" data-alt-zh="温室相机 4，改后" width="1600" height="900" loading="lazy" decoding="async"><span class="cmp-tag a"><span lang="en">Before</span><span lang="zh-Hans">改前</span></span><span class="cmp-tag b"><span lang="en">After</span><span lang="zh-Hans">改后</span></span><input class="cmp-range" id="cmp-greenhouse" type="range" min="0" max="100" step="0.5" value="50" aria-label="Drag to compare before and after" data-aria-en="Drag to compare before and after" data-aria-zh="拖动以对照改前与改后"><span class="cmp-handle" aria-hidden="true"><span class="cmp-knob"></span></span></div><div class="tabs" role="tablist" aria-label="Drag to compare before and after"><button type="button" role="tab" aria-selected="true" tabindex="0" data-a="assets/ga-third-v3.jpg" data-b="assets/ga-third-r3.jpg" data-alt-a-en="Greenhouse camera 4, before the glass change" data-alt-a-zh="温室相机 4，改前" data-alt-b-en="Greenhouse camera 4, after the glass change" data-alt-b-zh="温室相机 4，改后"><span lang="en">Camera 4</span><span lang="zh-Hans">相机 4</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-a="assets/ga-hero-before.jpg" data-b="assets/ga-hero-after.jpg" data-alt-a-en="Greenhouse camera 1, before the glass change" data-alt-a-zh="温室相机 1，改前" data-alt-b-en="Greenhouse camera 1, after the glass change" data-alt-b-zh="温室相机 1，改后"><span lang="en">Camera 1</span><span lang="zh-Hans">相机 1</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-a="assets/ga-atrium-before.jpg" data-b="assets/ga-atrium-after.jpg" data-alt-a-en="Greenhouse camera 2, before the glass change" data-alt-a-zh="温室相机 2，改前" data-alt-b-en="Greenhouse camera 2, after the glass change" data-alt-b-zh="温室相机 2，改后"><span lang="en">Camera 2</span><span lang="zh-Hans">相机 2</span></button></div></div><p lang="en" class="caption">The agent proposes an edit and judges the result. MCP connects tool calls to game state and actual output.</p><p lang="zh-Hans" class="caption">Agent 提出修改、执行工具调用，并用结果继续判断。MCP 把这些操作落到游戏状态与实际输出。</p><aside class="note"><h3 lang="en">Leave an explainable result</h3><h3 lang="zh-Hans">留下可解释的结果</h3><p lang="en">Retain the goal, changed values, views and recovery points so another person or agent can continue.</p><p lang="zh-Hans">保留目标、修改值、视角与恢复点，有助于其他人或 Agent 接手。</p></aside></div></section>
+<section class="ch ch-evidence" id="ch-10" data-ch="10"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">10</span><span class="eb-of">/ 12</span><span lang="en">Version comparison</span><span lang="zh-Hans">版本对比</span></p><h2 lang="en" class="h2">Rainline: compare version changes.</h2><h2 lang="zh-Hans" class="h2">Rainline：让版本变化可比较</h2><p lang="en" class="lead">TomProbe 0.2.1 on the left; 0.2.2 on the right.</p><p lang="zh-Hans" class="lead">左侧为 TomProbe 0.2.1，右侧为 0.2.2。</p></header><div class="cmp" data-compare><div class="cmp-stage"><img class="cmp-a" src="assets/rl-sunny-p021.jpg" alt="Rainline sunny, TomProbe 0.2.1" data-alt-en="Rainline sunny, TomProbe 0.2.1" data-alt-zh="Rainline 晴天，TomProbe 0.2.1" width="1920" height="1080" loading="lazy" decoding="async"><img class="cmp-b" src="assets/rl-sunny-p022.jpg" alt="Rainline sunny, TomProbe 0.2.2" data-alt-en="Rainline sunny, TomProbe 0.2.2" data-alt-zh="Rainline 晴天，TomProbe 0.2.2" width="1920" height="1080" loading="lazy" decoding="async"><span class="cmp-tag a"><span lang="en">TomProbe 0.2.1</span><span lang="zh-Hans">TomProbe 0.2.1</span></span><span class="cmp-tag b"><span lang="en">TomProbe 0.2.2</span><span lang="zh-Hans">TomProbe 0.2.2</span></span><input class="cmp-range" id="cmp-rainline" type="range" min="0" max="100" step="0.5" value="50" aria-label="Drag to compare TomProbe 0.2.1 and 0.2.2" data-aria-en="Drag to compare TomProbe 0.2.1 and 0.2.2" data-aria-zh="拖动以对照 TomProbe 0.2.1 与 0.2.2"><span class="cmp-handle" aria-hidden="true"><span class="cmp-knob"></span></span></div><div class="tabs" role="tablist" aria-label="Drag to compare TomProbe 0.2.1 and 0.2.2"><button type="button" role="tab" aria-selected="true" tabindex="0" data-a="assets/rl-sunny-p021.jpg" data-b="assets/rl-sunny-p022.jpg" data-alt-a-en="Rainline sunny, TomProbe 0.2.1" data-alt-a-zh="Rainline 晴天，TomProbe 0.2.1" data-alt-b-en="Rainline sunny, TomProbe 0.2.2" data-alt-b-zh="Rainline 晴天，TomProbe 0.2.2"><span lang="en">Sunny</span><span lang="zh-Hans">晴天</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-a="assets/rl-rainyday-p021.jpg" data-b="assets/rl-rainyday-p022.jpg" data-alt-a-en="Rainline rainy day, TomProbe 0.2.1" data-alt-a-zh="Rainline 雨天，TomProbe 0.2.1" data-alt-b-en="Rainline rainy day, TomProbe 0.2.2" data-alt-b-zh="Rainline 雨天，TomProbe 0.2.2"><span lang="en">Rainy day</span><span lang="zh-Hans">雨天</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-a="assets/rl-low-p021.jpg" data-b="assets/rl-low-p022.jpg" data-alt-a-en="Rainline rainy day, low, TomProbe 0.2.1" data-alt-a-zh="Rainline 雨天低视角，TomProbe 0.2.1" data-alt-b-en="Rainline rainy day, low, TomProbe 0.2.2" data-alt-b-zh="Rainline 雨天低视角，TomProbe 0.2.2"><span lang="en">Rainy day, low</span><span lang="zh-Hans">雨天低视角</span></button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-a="assets/rl-moonlit-p021.jpg" data-b="assets/rl-moonlit-p022.jpg" data-alt-a-en="Rainline moonlit, TomProbe 0.2.1" data-alt-a-zh="Rainline 月夜，TomProbe 0.2.1" data-alt-b-en="Rainline moonlit, TomProbe 0.2.2" data-alt-b-zh="Rainline 月夜，TomProbe 0.2.2"><span lang="en">Moonlit</span><span lang="zh-Hans">月夜</span></button></div></div><p lang="en" class="caption">Sunny, rainy, low-angle and moonlit views support upgrade checks. Compare images alongside state records and a clear criterion.</p><p lang="zh-Hans" class="caption">晴天、雨天、低视角与月夜可作为升级回归的观察点。结合状态记录与明确标准判断变化。</p></div></section>
+<section class="ch ch-detail" id="ch-11" data-ch="11"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">11</span><span class="eb-of">/ 12</span><span lang="en">Material detail</span><span lang="zh-Hans">材质细节</span></p><h2 lang="en" class="h2">The final mile reaches the details.</h2><h2 lang="zh-Hans" class="h2">最后一公里，也能回到材质细节</h2><p lang="en" class="lead">The supplied image contrasts puddle and wet-film appearance, moving from a finished view to a material-level question.</p><p lang="zh-Hans" class="lead">原图对比积水与湿膜：从整体成片走向具体材质表现的检查。</p></header></div><figure class="detail"><img src="assets/rl-puddle-2560.jpg" alt="Rainline rainy night: a street-lamp reflection in a puddle with ripple rings, beside grainy wet road" data-alt-en="Rainline rainy night: a street-lamp reflection in a puddle with ripple rings, beside grainy wet road" data-alt-zh="Rainline 雨夜：积水中的路灯倒影与涟漪环，旁边是颗粒状的湿路面" width="2560" height="1440" loading="lazy" decoding="async"><span class="pin l" style="--x: 40%; --y: 53%"><span class="pin-dot">1</span><span class="pin-label"><span lang="en">Puddle</span><span lang="zh-Hans">积水</span></span></span><span class="pin r" style="--x: 77%; --y: 54%"><span class="pin-dot">2</span><span class="pin-label"><span lang="en">Wet film</span><span lang="zh-Hans">湿膜</span></span></span><figcaption class="plate-hud detail-hud">Rainline · <span lang="en">rainy night</span><span lang="zh-Hans">雨夜</span> · 3840 × 2160 · <span lang="en">in-game capture</span><span lang="zh-Hans">游戏内截图</span></figcaption></figure><div class="wrap"><ol class="pin-legend"><li><span class="pin-dot">1</span><span><strong><span lang="en">Puddle</span><span lang="zh-Hans">积水</span></strong> <span lang="en">Flat reflection streak and ripple rings</span><span lang="zh-Hans">平展反射与涟漪环</span></span></li><li><span class="pin-dot">2</span><span><strong><span lang="en">Wet film</span><span lang="zh-Hans">湿膜</span></strong> <span lang="en">Grainy rough-normal sparkle</span><span lang="zh-Hans">颗粒状粗糙法线闪烁</span></span></li></ol><div class="points c2"><div class="point"><h3 lang="en">Developers: isolate and verify</h3><h3 lang="zh-Hans">开发者：定位与验证</h3><p lang="en">Relate appearance differences to material settings, scene resources and the rendering path.</p><p lang="zh-Hans">把效果差异与材质参数、场景资源和渲染路径对应起来。</p></div><div class="point"><h3 lang="en">Creators: express and iterate</h3><h3 lang="zh-Hans">创作者：表达与迭代</h3><p lang="en">Choose focused edits around the visual goal and retain a scene that can be developed further.</p><p lang="zh-Hans">围绕目标选择局部修改，并保留可继续工作的场景。</p></div></div><p lang="en" class="caption">MCP connects material edits to actual game images through ME, existing shaders and runtime services.</p><p lang="zh-Hans" class="caption">MCP 通过 ME、现有 Shader 与运行时服务，把材质调整落到实际游戏画面中。</p></div></section>
+<section class="ch ch-start" id="ch-12" data-ch="12"><div class="wrap"><header class="ch-head"><p class="eyebrow"><span class="eb-num">12</span><span class="eb-of">/ 12</span><span lang="en">Getting started</span><span lang="zh-Hans">上手</span></p><h2 lang="en" class="h2">Start with a clear goal.</h2><h2 lang="zh-Hans" class="h2">从一个明确的目标开始</h2><p lang="en" class="lead">Bring documentation, tools and inspectable output into a task that another person or agent can continue.</p><p lang="zh-Hans" class="lead">把文档、工具与可检查的输出组织成可继续执行的任务。</p></header><ol class="steps"><li><span class="big-num">01</span><h3 lang="en">Match the environment</h3><h3 lang="zh-Hans">配齐工作环境</h3><p lang="en">Install the host and one matching game bridge. Prepare the shaders, assets and rendering dependencies for the task.</p><p lang="zh-Hans">安装 Host 与一个匹配版本的游戏 Bridge；按任务准备 Shader、资产与渲染依赖。</p></li><li><span class="big-num">02</span><h3 lang="en">Read the contract, then act</h3><h3 lang="zh-Hans">读懂契约再执行</h3><p lang="en">Read the Agent Guide, skill and matching RenderDocs. Inspect live capabilities, scene state and material scope.</p><p lang="zh-Hans">按需读取 Agent Guide、Skill 与对应 RenderDocs；检查实时能力、场景和材质范围。</p></li><li><span class="big-num">03</span><h3 lang="en">Retain a usable result</h3><h3 lang="zh-Hans">留下可继续工作的成果</h3><p lang="en">Use images, state and saved-scene checks together. Hand the goal and results to the next user.</p><p lang="zh-Hans">让图像、状态与存档检查相互印证，再把目标和结果交给下一位使用者。</p></li></ol><div class="projects-head"><h3 lang="en">Projects and documentation</h3><h3 lang="zh-Hans">项目与文档</h3></div><div class="projects"><a class="project" href="https://github.com/tomTom1010-IEE/KK_StudioMCP" target="_blank" rel="noopener"><span class="p-name">StudioMCP</span><span lang="en" class="p-desc">Scene tools and renders</span><span lang="zh-Hans" class="p-desc">场景、材质、镜头与出图</span><span class="p-url">github.com/tomTom1010-IEE/KK_StudioMCP</span></a><a class="project" href="https://github.com/tomTom1010-IEE/TomRenderInfrastructure" target="_blank" rel="noopener"><span class="p-name">TomRenderInfrastructure</span><span lang="en" class="p-desc">Shared runtime services</span><span lang="zh-Hans" class="p-desc">相机上下文与渲染服务</span><span class="p-url">github.com/tomTom1010-IEE/TomRenderInfrastructure</span></a><a class="project" href="https://github.com/tomTom1010-IEE/TomBSDF" target="_blank" rel="noopener"><span class="p-name">TomBSDF</span><span lang="en" class="p-desc">Materials and RenderDocs</span><span lang="zh-Hans" class="p-desc">物理材质与 Shader 文档</span><span class="p-url">github.com/tomTom1010-IEE/TomBSDF</span></a><a class="project" href="https://github.com/tomTom1010-IEE/TomshadersX" target="_blank" rel="noopener"><span class="p-name">TomX</span><span lang="en" class="p-desc">Character and item shaders</span><span lang="zh-Hans" class="p-desc">角色与物品 Shader</span><span class="p-url">github.com/tomTom1010-IEE/TomshadersX</span></a></div><div class="colophon"><p lang="en">Snapshot: StudioMCP 0.1.0 RC1 · Shared infrastructure 0.1.0.</p><p lang="zh-Hans">版本：StudioMCP 0.1.0 RC1 · 共享基建 0.1.0。</p><p lang="en">User-supplied images show task reproductions on other devices and agents. Sources, versions and evidence scope are in the README.</p><p lang="zh-Hans">原图由用户提供，展示跨设备 / Agent 的任务复现。详细版本、图片来源与验证范围见随附 README。</p><p lang="en">Scenes: CrystalFantasy and the greenhouse come from <a href="https://github.com/ShiyumeMeguri/ProceduralParadise" target="_blank" rel="noopener">ProceduralParadise</a> by ShiyumeMeguri (AGPL-3.0).</p><p lang="zh-Hans">场景来源：CrystalFantasy 与温室来自 ShiyumeMeguri 的 <a href="https://github.com/ShiyumeMeguri/ProceduralParadise" target="_blank" rel="noopener">ProceduralParadise</a>（AGPL-3.0）。</p></div></div></section>
+</main>
+<footer class="foot"><div class="wrap foot-in"><span class="foot-mark">StudioMCP</span><span><span lang="en">Tom's rendering ecosystem</span><span lang="zh-Hans">Tom 的渲染生态</span></span><span><span lang="en">Ecosystem showcase · 2026-10-28</span><span lang="zh-Hans">生态展示 · 2026-10-28</span></span></div></footer>
+<script>
+(() => {
+  const root = document.documentElement;
+  const KEY = 'studiomcp-showcase-lang';
+  const zh = () => root.dataset.lang === 'zh';
+  const setAlt = el => { const v = zh() ? el.dataset.altZh : el.dataset.altEn; if (v) el.alt = v; };
+  const setAria = el => { const v = zh() ? el.dataset.ariaZh : el.dataset.ariaEn; if (v) el.setAttribute('aria-label', v); };
+  function setLang(lang, store) {
+    root.dataset.lang = lang;
+    root.lang = lang === 'zh' ? 'zh-Hans' : 'en';
+    document.querySelectorAll('[data-set-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setLang === lang)));
+    document.querySelectorAll('img[data-alt-en]').forEach(setAlt);
+    document.querySelectorAll('[data-aria-en]').forEach(setAria);
+    if (store) { try { localStorage.setItem(KEY, lang); } catch (e) {} }
+  }
+  document.querySelectorAll('[data-set-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.setLang, true)));
+  window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h === 'zh' || h === 'en') setLang(h, true); });
+  setLang(zh() ? 'zh' : 'en', false);
+
+  function tablist(list, onSelect) {
+    const tabs = [...list.querySelectorAll('[role="tab"]')];
+    const select = (i, focus) => {
+      tabs.forEach((tab, j) => { tab.setAttribute('aria-selected', String(i === j)); tab.tabIndex = i === j ? 0 : -1; });
+      onSelect(tabs[i]);
+      if (focus) tabs[i].focus();
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(i));
+      tab.addEventListener('keydown', e => {
+        const n = tabs.length;
+        const j = { ArrowRight: (i + 1) % n, ArrowDown: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, ArrowUp: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+        if (j !== undefined) { e.preventDefault(); select(j, true); }
+      });
+    });
+  }
+
+  document.querySelectorAll('[data-viewer]').forEach(v => {
+    const img = v.querySelector('.stage-img');
+    const hud = v.querySelector('[data-hud]');
+    tablist(v.querySelector('[role="tablist"]'), tab => {
+      img.src = tab.dataset.src;
+      img.dataset.altEn = tab.dataset.altEn;
+      img.dataset.altZh = tab.dataset.altZh;
+      setAlt(img);
+      hud.innerHTML = tab.querySelector('.t-label').innerHTML;
+    });
+  });
+
+  document.querySelectorAll('[data-compare]').forEach(c => {
+    const stage = c.querySelector('.cmp-stage');
+    const range = c.querySelector('.cmp-range');
+    const a = c.querySelector('.cmp-a');
+    const b = c.querySelector('.cmp-b');
+    const split = () => stage.style.setProperty('--split', range.value + '%');
+    range.addEventListener('input', split);
+    split();
+    // Drag anywhere on the image (iOS only drags a native range by its thumb).
+    let drag = false;
+    const move = e => {
+      const r = stage.getBoundingClientRect();
+      range.value = String(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)));
+      split();
+    };
+    stage.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      drag = true;
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      move(e);
+    });
+    stage.addEventListener('pointermove', e => { if (drag) move(e); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => stage.addEventListener(type, () => { drag = false; }));
+    tablist(c.querySelector('[role="tablist"]'), tab => {
+      a.src = tab.dataset.a; b.src = tab.dataset.b;
+      a.dataset.altEn = tab.dataset.altAEn; a.dataset.altZh = tab.dataset.altAZh;
+      b.dataset.altEn = tab.dataset.altBEn; b.dataset.altZh = tab.dataset.altBZh;
+      setAlt(a); setAlt(b);
+    });
+  });
+
+  const bar = document.querySelector('[data-bar]');
+  const plate = document.querySelector('.plate');
+  if ('IntersectionObserver' in window && bar && plate) {
+    new IntersectionObserver(([e]) => bar.classList.toggle('is-solid', !e.isIntersecting), { rootMargin: '-64px 0px 0px 0px' }).observe(plate);
+    const segs = new Map([...document.querySelectorAll('[data-nav]')].map(s => [s.dataset.nav, s]));
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      segs.forEach(s => s.removeAttribute('aria-current'));
+      const s = segs.get(e.target.dataset.ch);
+      if (s) s.setAttribute('aria-current', 'true');
+    }), { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('[data-ch]').forEach(s => io.observe(s));
+  }
+})();
+</script>
+</body>
+</html>
