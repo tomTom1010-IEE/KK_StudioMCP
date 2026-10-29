@@ -1,7 +1,8 @@
 # Character posing and Timeline
 
-These source additions extend the original 40-tool RC1 with 20 character/animation tools.
-They are not included in the previously published RC1 binaries. Rebuild both the host and game bridge.
+Version 0.2.0 RC1 extends the original 40 tools with 20 character/animation tools. Update both the
+host and game bridge and refresh the client's tool list. The 0.1.0 RC1 packages do not contain them.
+The new tools passed live checks on KKS with KKPE 2.21.4 and Timeline 1.5.4; KK is build-verified only.
 
 ## Providers and saved data
 

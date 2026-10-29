@@ -14,7 +14,7 @@ using WebSocketSharp.Server;
 
 namespace StudioMcp.Bridge
 {
-    [BepInPlugin("com.tomtom.studiomcp", "Studio MCP Bridge", "0.1.0")]
+    [BepInPlugin("com.tomtom.studiomcp", "Studio MCP Bridge", "0.2.0")]
     [BepInProcess("CharaStudio.exe")]
     [BepInDependency(PluginAccess.PoseEditorId, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(PluginAccess.TimelineId, BepInDependency.DependencyFlags.SoftDependency)]
