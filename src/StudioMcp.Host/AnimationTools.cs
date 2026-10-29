@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using static StudioMcp.Host.StudioTools;
@@ -51,4 +52,45 @@ public static class AnimationTools
     [McpServerTool, Description("Remove one named KKPE blendshape override and restore its recorded original weight, preserving other shapes.")]
     public static Task<JsonObject> PoseBlendshapeReset(BridgeClient bridge, string sceneSession, int objectId, int rendererId, string shapeName)
         => bridge.Call("pose.blendshape_reset", Args(new { sceneSession, objectId, rendererId, shapeName }));
+
+    [McpServerTool, Description("Inspect optional Timeline availability, playing state, time in seconds, duration, frame rate, speed and track kinds. Does not start playback or install a plugin.")]
+    public static Task<JsonObject> TimelineGet(BridgeClient bridge) => bridge.Call("timeline.get");
+
+    [McpServerTool, Description("Control installed Timeline using its original play/pause/stop/seek/next_frame/previous_frame methods. seek requires time in seconds inside the project duration. Playback is owned by Timeline, not an MCP scheduler.")]
+    public static Task<JsonObject> TimelineControl(BridgeClient bridge, string sceneSession, string action, float? time = null)
+        => bridge.Call("timeline.control", Args(new { sceneSession, action, time }));
+
+    [McpServerTool, Description("Set paused Timeline project controls through its original handlers: duration in seconds (positive, <=86400), frameRate (integer 1-240) and speed (0-100, Timeline's global Unity time scale). Existing keyframes are retained when duration changes.")]
+    public static Task<JsonObject> TimelineSettings(BridgeClient bridge, string sceneSession, float? duration = null, int? frameRate = null, float? speed = null)
+        => bridge.Call("timeline.settings", Args(new { sceneSession, duration, frameRate, speed }));
+
+    [McpServerTool, Description("List existing native Timeline tracks, their owner/model, target binding, value and keyframe count. Optional object filter and pagination. trackId is a current-scene handle; reacquire after loading. Other providers' tracks can be inspected but are not edited by this version.")]
+    public static Task<JsonObject> TimelineTracks(BridgeClient bridge, int? objectId = null, int offset = 0, int limit = 50)
+        => bridge.Call("timeline.tracks", Args(new { objectId, offset, limit }));
+
+    [McpServerTool, Description("Create or find a paused Timeline track using existing Timeline/KKPE models. kind: object_position/object_rotation/object_scale; fk_rotation or ik_position/ik_rotation with controlId; bone_position/bone_rotation/bone_scale with boneId; blendshape with rendererId and shapeName. KKPE bone rotation controlled by active FK binds the native FK track. Optional name applies only to a new track. Native plugin save formats and interpolation are retained.")]
+    public static Task<JsonObject> TimelineTrackCreate(BridgeClient bridge, string sceneSession, int objectId, string kind,
+        int? controlId = null, int? boneId = null, int? rendererId = null, string? shapeName = null, string? name = null)
+        => bridge.Call("timeline.track_create", Args(new { sceneSession, objectId, kind, controlId, boneId, rendererId, shapeName, name }));
+
+    [McpServerTool, Description("Set enabled or the display name of an existing paused native object/FK/IK or KKPE bone/blendshape track. Other tracks and keyframes are retained.")]
+    public static Task<JsonObject> TimelineTrackSet(BridgeClient bridge, string sceneSession, int trackId, bool? enabled = null, string? name = null)
+        => bridge.Call("timeline.track_set", Args(new { sceneSession, trackId, enabled, name }));
+
+    [McpServerTool, Description("Remove one paused native object/FK/IK or KKPE bone/blendshape Timeline track and its keyframes through Timeline's own removal method.")]
+    public static Task<JsonObject> TimelineTrackRemove(BridgeClient bridge, string sceneSession, int trackId)
+        => bridge.Call("timeline.track_remove", Args(new { sceneSession, trackId }));
+
+    [McpServerTool, Description("Read a Timeline track's keyframe times, native values and interpolation curves, with pagination. Quaternion values are [x,y,z,w].")]
+    public static Task<JsonObject> TimelineKeyframes(BridgeClient bridge, int trackId, int offset = 0, int limit = 50)
+        => bridge.Call("timeline.keyframes", Args(new { trackId, offset, limit }));
+
+    [McpServerTool, Description("Add/edit a paused native object/FK/IK or KKPE bone/blendshape keyframe at time seconds. Omit value to record the current target value; otherwise provide a scalar, vec3, Euler degrees [x,y,z] for rotation, or quaternion [x,y,z,w]. Existing time requires replace=true. curve is linear, smooth or step for the interval from this key to the next; omitted curve preserves an existing curve and defaults to linear for new keys.")]
+    public static Task<JsonObject> TimelineKeyframeSet(BridgeClient bridge, string sceneSession, int trackId, float time,
+        JsonElement? value = null, string? curve = null, bool replace = false)
+        => bridge.Call("timeline.keyframe_set", Args(new { sceneSession, trackId, time, value, curve, replace }));
+
+    [McpServerTool, Description("Remove the keyframe at an exact time from a paused native object/FK/IK or KKPE bone/blendshape track using Timeline's own deletion method. An empty track is retained.")]
+    public static Task<JsonObject> TimelineKeyframeRemove(BridgeClient bridge, string sceneSession, int trackId, float time)
+        => bridge.Call("timeline.keyframe_remove", Args(new { sceneSession, trackId, time }));
 }

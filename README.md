@@ -68,6 +68,14 @@ See the [release-readiness checklist](docs/Release-Readiness.md) for the reviewe
 remaining binary-distribution work and unqualified runtime cases. Documentation is not authorization
 to deploy, replace a scene, rebuild shaders or run the live integration scripts.
 
+## Character posing and animation (source additions)
+
+The source now includes native Studio FK/IK controls, KKPE fine bones and blendshapes, and native
+Timeline track/keyframe editing. KKPE and Timeline remain optional; playback and save data stay
+with their original plugins. See [Character Animation](docs/Character-Animation.md) for tools,
+coordinate frames, bindings and verification. Rebuild both the host and bridge for these additions;
+the previously published RC1 binaries retain their original 40-tool scope.
+
 ## Current verified state
 
 - Original KoikatuMCP + KKStudioSocket built and exercised in a real KKS process: scene tree,
