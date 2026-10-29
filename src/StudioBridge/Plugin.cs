@@ -16,6 +16,7 @@ namespace StudioMcp.Bridge
 {
     [BepInPlugin("com.tomtom.studiomcp", "Studio MCP Bridge", "0.1.0")]
     [BepInProcess("CharaStudio.exe")]
+    [BepInDependency(PluginAccess.PoseEditorId, BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -33,6 +34,8 @@ namespace StudioMcp.Bridge
         internal RenderCommands Rendering;
         internal ToneCommands Tone;
         internal BatchCommands Batches;
+        internal CharacterCommands Characters;
+        internal PoseEditorCommands PoseEditor;
         internal string Session = Guid.NewGuid().ToString("N");
         internal string OutputRoot;
         internal bool WritesEnabled => _allowWrites.Value
@@ -65,6 +68,8 @@ namespace StudioMcp.Bridge
             Tone = new ToneCommands();
             StudioSaveLoadApi.RegisterExtraBehaviour<BridgeSceneController>("com.tomtom.studiomcp.scene");
             Batches = new BatchCommands(this);
+            Characters = new CharacterCommands(this);
+            PoseEditor = new PoseEditorCommands(this);
             _originalBackground = Application.runInBackground;
             Application.runInBackground = true;
             StudioSaveLoadApi.SceneLoad += SceneLoaded;
@@ -164,11 +169,15 @@ namespace StudioMcp.Bridge
                 ["plugins"] = new JArray(Chainloader.PluginInfos.Values.Where(p =>
                     p.Metadata.Name.IndexOf("Material", StringComparison.OrdinalIgnoreCase) >= 0
                     || p.Metadata.Name.IndexOf("Screencap", StringComparison.OrdinalIgnoreCase) >= 0
+                    || p.Metadata.GUID == PluginAccess.PoseEditorId
                     || p.Metadata.GUID == "com.tomtom.studiomcp").Select(p => new JObject
                 { ["id"] = p.Metadata.GUID, ["name"] = p.Metadata.Name, ["version"] = p.Metadata.Version.ToString() })),
                 ["materialEditor"] = Materials.Available, ["screencap"] = Capture.Available,
-                ["depthCapture"] = Capture.DepthAvailable, ["captureOptions"] = Capture.Capabilities
+                ["depthCapture"] = Capture.DepthAvailable, ["captureOptions"] = Capture.Capabilities,
+                ["characterControls"] = true, ["poseEditor"] = new JObject { ["available"] = PoseEditorCommands.Available }
             };
+            if (method.StartsWith("character.", StringComparison.Ordinal)) return Characters.Execute(method, args);
+            if (method.StartsWith("pose.", StringComparison.Ordinal)) return PoseEditor.Execute(method, args);
             if (method.StartsWith("me.", StringComparison.Ordinal)) return Materials.Execute(method, args);
             if (method.StartsWith("capture.", StringComparison.Ordinal)) return Capture.Execute(method, args);
             if (method.StartsWith("batch.", StringComparison.Ordinal)) return Batches.Execute(method, args);
@@ -197,7 +206,10 @@ namespace StudioMcp.Bridge
                 || method == "me.set" || method == "me.reset" || method == "me.import_texture" || method == "me.texture_transform"
                 || method == "me.render_queue"
                 || method == "render.set" || method == "skybox.bind" || method == "native_effects.set" || method == "native_sky.set"
-                || method == "object.set_visible" || method == "tonemap.set" || method == "dof_compat.set" || method.StartsWith("batch.", StringComparison.Ordinal);
+                || method == "object.set_visible" || method == "tonemap.set" || method == "dof_compat.set"
+                || method == "character.kinematics" || method == "character.control_set"
+                || method == "pose.bone_set" || method == "pose.bone_reset" || method == "pose.blendshape_set" || method == "pose.blendshape_reset"
+                || method.StartsWith("batch.", StringComparison.Ordinal);
         }
 
         private static JObject Error(string id, Exception error) => new JObject

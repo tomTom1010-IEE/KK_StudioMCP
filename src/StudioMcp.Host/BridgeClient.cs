@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ModelContextProtocol;
 
 namespace StudioMcp.Host;
 
@@ -38,7 +39,7 @@ public sealed class BridgeClient
         var result = JsonNode.Parse(response.ToArray())!.AsObject();
         if (result["id"]?.GetValue<string>() != id) throw new IOException("Bridge response id does not match.");
         if (result["ok"]?.GetValue<bool>() != true)
-            throw new InvalidOperationException(result["error"]?["message"]?.GetValue<string>() ?? "Bridge request failed.");
+            throw new McpException(result["error"]?["message"]?.GetValue<string>() ?? "Bridge request failed.");
         return new JsonObject { ["result"] = result["result"]?.DeepClone() };
     }
 }

@@ -194,7 +194,7 @@ public static class StudioTools
         throw new TimeoutException("Capture is still running. Do not restart the game or repeat the capture blindly.");
     }
 
-    private static JsonObject Args(object value) => System.Text.Json.JsonSerializer.SerializeToNode(
+    internal static JsonObject Args(object value) => System.Text.Json.JsonSerializer.SerializeToNode(
         value, new System.Text.Json.JsonSerializerOptions { DefaultIgnoreCondition =
             System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull })!.AsObject();
 }
