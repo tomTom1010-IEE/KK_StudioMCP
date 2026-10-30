@@ -61,11 +61,18 @@ using recorded originals, without resetting children or unrelated native FK rota
 `pose_blendshapes` lists real renderer IDs, shape names, weights and override state. Use
 `pose_blendshape_set` with a unique `shapeName`; the adapter uses KKPE's name-based setter rather
 than guessing from an old mesh index. Negative and overdrive weights are supported. Resetting a
-shape uses KKPE's original recorded weight and retains other shape overrides. The adapter applies
+shape uses KKPE's original recorded weight and retains unrelated shape overrides. The adapter applies
 the provider's changes before returning; it does not write Unity-only weights that disappear on save.
 The response distinguishes the actual `weight`, KKPE's `overrideWeight` and its recorded
 `originalWeight`. A blinking/animated shape can change between inspection and the first edit;
 its reset target is the provider's recorded original, not an earlier inspection snapshot.
+
+Direct set/reset follows KKPE's current **Link eyes components** switch, just like the KKPE UI and
+its native Timeline track. Reads and mutation responses expose this as `linkEyesComponents`; the
+MCP operation does not change the switch. When enabled, KKPE resolves related eye meshes using
+its own link keys and original-index mapping. Reset restores each linked shape's recorded original
+and clears its override; it does not assign the source shape's original weight to every mesh.
+When the switch is disabled, or the selected shape has no link, only that named shape changes.
 
 Meshes can be replaced during coordinate/clothing/character changes. Inspect again after such
 changes. Ambiguous hierarchy paths are reported and cannot be used for saved edits.

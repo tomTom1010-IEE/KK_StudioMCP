@@ -102,6 +102,7 @@ namespace StudioMcp.Bridge
                     }
                 }
                 return new JObject { ["available"] = true, ["objectId"] = target.objectInfo.dicKey,
+                    ["linkEyesComponents"] = (bool)PluginAccess.Get(blendEditor, "_linkEyesComponents"),
                     ["total"] = rows.Count, ["blendshapes"] = new JArray(rows.Skip(offset).Take(limit)) };
             }
             if (method != "pose.blendshape_set" && method != "pose.blendshape_reset")
@@ -111,6 +112,15 @@ namespace StudioMcp.Bridge
             var blend = BlendRenderer(target, (int)args["rendererId"], out editor, out meshRenderer);
             var shapeName = (string)args["shapeName"];
             var index = ShapeIndex(meshRenderer, shapeName);
+            var linkEyesComponents = (bool)PluginAccess.Get(editor, "_linkEyesComponents");
+            var linkIndex = -1;
+            if (linkEyesComponents)
+            {
+                var linkCount = ((IList)PluginAccess.Get(blend, "_linkKeynameList")).Count;
+                if (linkCount > 0)
+                    linkIndex = SavedShapeIndices(blend, meshRenderer, shapeName)
+                        .Where(i => i >= 0 && i < linkCount).DefaultIfEmpty(-1).First();
+            }
             var shapeOverrides = (IDictionary)PluginAccess.Get(blend, "_dirtyBlends");
             float? originalWeight = shapeOverrides.Contains(shapeName) ? (float?)PluginAccess.Get(shapeOverrides[shapeName], "originalWeight") : null;
             if (method == "pose.blendshape_set")
@@ -119,11 +129,17 @@ namespace StudioMcp.Bridge
                 if (PluginAccess.Call(blend, "SetBlendShapeWeight", shapeName, weight) == null)
                     throw new InvalidOperationException("KKPE did not accept this blendshape; refresh its renderer list.");
                 originalWeight = (float)PluginAccess.Get(shapeOverrides[shapeName], "originalWeight");
+                if (linkIndex >= 0) PluginAccess.Call(blend, "ApplyLink", weight, linkIndex, false);
             }
-            else PluginAccess.Call(blend, "NonDirty", shapeName);
+            else
+            {
+                PluginAccess.Call(blend, "NonDirty", shapeName);
+                if (linkIndex >= 0) PluginAccess.Call(blend, "ApplyLink", 0f, linkIndex, true);
+            }
             PluginAccess.Call(editor, "ApplyBlendShapeWeights");
             return new JObject { ["objectId"] = target.objectInfo.dicKey, ["rendererId"] = meshRenderer.GetInstanceID(),
                 ["shapeName"] = shapeName, ["weight"] = meshRenderer.GetBlendShapeWeight(index),
+                ["linkEyesComponents"] = linkEyesComponents,
                 ["originalWeight"] = originalWeight, ["overridden"] = shapeOverrides.Contains(shapeName),
                 ["overrideWeight"] = shapeOverrides.Contains(shapeName) ? (float?)PluginAccess.Get(shapeOverrides[shapeName], "weight") : null };
         }
@@ -160,6 +176,13 @@ namespace StudioMcp.Bridge
                 .Where(i => renderer.sharedMesh.GetBlendShapeName(i) == name).ToArray();
             if (matches.Length != 1) throw new ArgumentException("Use a unique shapeName from pose_blendshapes.");
             return matches[0];
+        }
+
+        internal static int[] SavedShapeIndices(object blend, SkinnedMeshRenderer renderer, string name)
+        {
+            var originals = (IDictionary)PluginAccess.Get(blend, "_oriBlendIndex");
+            var indices = originals.Count == 0 ? Enumerable.Range(0, renderer.sharedMesh.blendShapeCount) : originals.Keys.Cast<int>();
+            return indices.Where(i => (string)PluginAccess.Call(blend, "GetBlendShapeName", i) == name).ToArray();
         }
 
         internal static OCIChar.BoneInfo NativeFk(object editor, Transform bone)

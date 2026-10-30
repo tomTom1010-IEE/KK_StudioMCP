@@ -51,9 +51,7 @@ namespace StudioMcp.Bridge
                     var wrapper = _plugin.PoseEditor.BlendRenderer(target, RequiredId(args, "rendererId"), out blends, out renderer);
                     var shapeName = (string)args["shapeName"];
                     PoseEditorCommands.ShapeIndex(renderer, shapeName);
-                    var originals = (IDictionary)PluginAccess.Get(wrapper, "_oriBlendIndex");
-                    var indices = originals.Count == 0 ? Enumerable.Range(0, renderer.sharedMesh.blendShapeCount) : originals.Keys.Cast<int>();
-                    var matches = indices.Where(i => (string)PluginAccess.Call(wrapper, "GetBlendShapeName", i) == shapeName).ToArray();
+                    var matches = PoseEditorCommands.SavedShapeIndices(wrapper, renderer, shapeName);
                     if (matches.Length != 1) throw new InvalidOperationException("KKPE cannot bind this shape uniquely to its saved index.");
                     owner = "KKPE";
                     modelId = "lastBlendShape";

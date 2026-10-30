@@ -40,16 +40,16 @@ public static class AnimationTools
     public static Task<JsonObject> PoseBoneReset(BridgeClient bridge, string sceneSession, int objectId, int boneId, string channel = "all")
         => bridge.Call("pose.bone_reset", Args(new { sceneSession, objectId, boneId, channel }));
 
-    [McpServerTool, Description("List KKPE blendshapes by actual rendererId and unique shapeName, with current Unity weight and override state. Optional renderer and shape-name filters; paginated. Returns available=false when KKPE is absent.")]
+    [McpServerTool, Description("List KKPE blendshapes by actual rendererId and unique shapeName, with current Unity weight, override state and the provider's current linkEyesComponents setting. Optional renderer and shape-name filters; paginated. Returns available=false when KKPE is absent.")]
     public static Task<JsonObject> PoseBlendshapes(BridgeClient bridge, int objectId, int? rendererId = null,
         string query = "", int offset = 0, int limit = 50)
         => bridge.Call("pose.blendshapes", Args(new { objectId, rendererId, query, offset, limit }));
 
-    [McpServerTool, Description("Set one named blendshape through KKPE's original name-based dirty-state API and apply it before returning. Preserves KKPE's saved originals and scene persistence. Typical weights are 0-100; finite negative/overdrive values are supported.")]
+    [McpServerTool, Description("Set one named blendshape through KKPE's original name-based dirty-state API and apply it before returning. Follows KKPE's current Link eyes components setting, so linked meshes can also change. Preserves saved originals and scene persistence. Typical weights are 0-100; finite negative/overdrive values are supported.")]
     public static Task<JsonObject> PoseBlendshapeSet(BridgeClient bridge, string sceneSession, int objectId, int rendererId, string shapeName, float weight)
         => bridge.Call("pose.blendshape_set", Args(new { sceneSession, objectId, rendererId, shapeName, weight }));
 
-    [McpServerTool, Description("Remove one named KKPE blendshape override and restore its recorded original weight, preserving other shapes.")]
+    [McpServerTool, Description("Remove one named KKPE blendshape override and restore its recorded original weight. With KKPE's Link eyes components enabled, linked shapes also restore their own recorded originals. Other shapes are retained.")]
     public static Task<JsonObject> PoseBlendshapeReset(BridgeClient bridge, string sceneSession, int objectId, int rendererId, string shapeName)
         => bridge.Call("pose.blendshape_reset", Args(new { sceneSession, objectId, rendererId, shapeName }));
 
