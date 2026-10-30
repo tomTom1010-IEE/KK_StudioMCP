@@ -1,15 +1,15 @@
-# StudioMCP 0.2.0 RC0 Installation
+# StudioMCP 0.2.0 RC1 Installation
 
-This is a public pre-release, not a rendering-plugin bundle. Keep your game, mod stack and current
+This is a public release candidate, not a rendering-plugin bundle. Keep your game, mod stack and current
 scenes backed up. No installer or test runs automatically.
 
 ## Choose Downloads
 
-- `StudioMCP-0.2.0-rc0-Host.zip`: complete framework-dependent .NET 8 host, dependencies and the
+- `StudioMCP-0.2.0-rc1-Host.zip`: complete framework-dependent .NET 8 host, dependencies and the
   optional portable authoring skill. Tested on Windows; run the DLL through `dotnet`, not BepInEx.
-- `StudioMCP-0.2.0-rc0-KKS.zip`: KKS game bridge and its two managed dependencies, in game-relative
+- `StudioMCP-0.2.0-rc1-KKS.zip`: KKS game bridge and its two managed dependencies, in game-relative
   folders. The bridge targets .NET Framework 4.6 / KKS Mono.
-- `StudioMCP-0.2.0-rc0-KK.zip`: KK compatibility build, targeting .NET Framework 3.5 / legacy Mono.
+- `StudioMCP-0.2.0-rc1-KK.zip`: KK compatibility build, targeting .NET Framework 3.5 / legacy Mono.
   Newer KKS authoring features have not all been requalified on KK; optional DOF/snapshot controls
   deliberately return unavailable there. Do not interpret a successful build as full KK acceptance.
   The new character/animation tools passed KKS live checks; they are build-verified only on KK.
@@ -96,7 +96,7 @@ $paths = @{
     OutputDirectory = '.local/releases/rc1-new-candidate'
 }
 ./tools/package.ps1 @paths
-python ./tools/audit_packages.py --assets .local/releases/rc1-new-candidate/assets --commit <full-source-commit> --version 0.2.0-rc0
+python ./tools/audit_packages.py --assets .local/releases/rc1-new-candidate/assets --commit <full-source-commit> --version 0.2.0-rc1
 ```
 
 The recipe requires committed dependency locks, builds edition-isolated outputs and creates a new
