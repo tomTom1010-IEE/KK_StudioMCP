@@ -1,4 +1,4 @@
-# Release Readiness: 0.2.0 RC1
+# Release Readiness: 0.2.0 RC0
 
 Review date: 2026-10-30. This public pre-release adds character posing and animation to the existing
 scene/material/rendering tools. Publishing does not change the repository's visibility or qualify
@@ -10,7 +10,7 @@ Native FK/IK uses Studio's original interfaces. Fine bones and blendshapes use K
 persistence methods; tracks and keyframes use existing Timeline/KKPE models. No new solver,
 animation scheduler or saved-data format is introduced. Optional providers are not bundled.
 
-Product version comes from Directory.Build.props: 0.2.0-rc1, assembly/file version 0.2.0.0.
+Product version comes from Directory.Build.props: 0.2.0-rc0, assembly/file version 0.2.0.0.
 BepInEx metadata uses version 0.2.0 and the unchanged GUID com.tomtom.studiomcp. Informational
 versions and package manifests record the exact source commit; it must match the release tag.
 The MCP SDK dependency version remains separate from the product version.
@@ -37,7 +37,7 @@ provider versions, other posing/physics plugins, long-running motion or GPU fail
 
 ## Packaging And Installation
 
-See [Installation](Installation.md), [release notes](ReleaseNotes-0.2.0-rc1.md),
+See [Installation](Installation.md), [release notes](ReleaseNotes-0.2.0-rc0.md),
 [character animation](Character-Animation.md), [acceptance checklist](RC1-Acceptance.md),
 [contract tests](../tests/ExtensionContracts/README.md) and [dependency notices](../THIRD-PARTY-NOTICES.md).
 

@@ -8,9 +8,9 @@ It consumes installed plugins' public APIs; it does not patch Material Editor so
 **The final piece.** Connect asset preparation to actual in-game rendering, then bring the result
 back into the next decision. **[Open the ecosystem showcase →](https://tomtom1010-iee.github.io/KK_StudioMCP/)** · [中文](https://tomtom1010-iee.github.io/KK_StudioMCP/#zh)
 
-**[0.2.0 RC1 downloads](https://github.com/tomTom1010-IEE/KK_StudioMCP/releases/tag/v0.2.0-rc1)**:
+**[0.2.0 RC0 downloads](https://github.com/tomTom1010-IEE/KK_StudioMCP/releases/tag/v0.2.0-rc0)**:
 Host plus ONE matching KKS/KK bridge. This is a public pre-release. [Install/upgrade](docs/Installation.md),
-[RC acceptance](docs/RC1-Acceptance.md), [release notes](docs/ReleaseNotes-0.2.0-rc1.md) and
+[RC acceptance](docs/RC1-Acceptance.md), [release notes](docs/ReleaseNotes-0.2.0-rc0.md) and
 [dependency notices](THIRD-PARTY-NOTICES.md).
 
 ## Showcase
@@ -70,7 +70,7 @@ to deploy, replace a scene, rebuild shaders or run the live integration scripts.
 
 ## Character posing and animation
 
-Version 0.2.0 RC1 adds native Studio FK/IK controls, KKPE fine bones and blendshapes, and native
+Version 0.2.0 RC0 adds native Studio FK/IK controls, KKPE fine bones and blendshapes, and native
 Timeline track/keyframe editing. KKPE and Timeline remain optional; playback and save data stay
 with their original plugins. See [Character Animation](docs/Character-Animation.md) for tools,
 coordinate frames, bindings and verification. Update both the host and bridge, then refresh the
