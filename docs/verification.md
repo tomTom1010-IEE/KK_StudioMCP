@@ -183,3 +183,35 @@ was imported; its original source file remained byte-for-byte unchanged.
 The owned test process was closed afterward. Raw responses, copied test cards, checkpoints, logs
 and captures remain local and are not included in source control. The new animation tools were
 compiled for KK, but this run does not qualify their KK runtime behavior or other provider versions.
+
+## Scene hierarchy tools — 2026-11-02
+
+`add_folder`, `set_parent` and `character_attach_points` reuse Studio's own folder and parenting code:
+`AddObjectFolder.Add` and the `OCIFolder.name` setter for folders, and `TreeNodeCtrl.SetParent` (the path
+behind the workspace parent/unparent buttons) for moves, so the new parent's `OnAttach` or the object's
+`OnDetach` does the work. A character takes children only on its attach-point nodes; the bridge finds
+them through `OCIChar.dicAccessoryPoint` and checks that the attach bone has loaded before moving.
+`scene_snapshot` now takes `parentId` from `parentInfo` (it was null under a character attach point) and
+adds `attachPoint`/`attachPointName` and `worldPosition`.
+
+The KKS bridge and the host passed Release builds with zero warnings/errors, and real stdio MCP
+discovery returned 63 tools. `tools/verify_hierarchy.py` then ran in an owned, initially empty KKS
+Studio with writes enabled for that process only, using a copy of an existing female card whose source
+file remained unchanged:
+
+- Folders were created with saved names, including one created inside another folder.
+- An item moved into the nested folder kept its world position and moved with the outer folder.
+- Two objects moved in one call; repeating a move reported the object as unchanged.
+- `character_attach_points` listed the native points with names and groups. An item attached to
+  `a_n_hand_R` kept its world position; after an FK upper-arm bend it moved with the hand, and its
+  distance to the hand joint stayed within 5 mm.
+- Parenting into a descendant, onto the object itself, under a light, onto a character without an
+  attach point or with an unknown one, duplicate and missing IDs, an empty folder name and use inside
+  `batch_apply` were rejected, and no object changed parent.
+- Unparenting kept the world position. A folder was created directly on `a_n_hand_L` at its origin.
+- After a scene checkpoint and reload, every object's parent, attach point and world position (within
+  1 cm) and the folder names were unchanged.
+
+A Screencap capture of the reloaded scene showed the attached item at the right hand after its local
+position was set to the origin. The owned test process was closed afterward. The KK target was not
+compiled or run for this change.

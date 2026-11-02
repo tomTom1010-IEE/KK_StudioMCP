@@ -11,6 +11,10 @@ not a rendering engine and not an authority on every installed shader's mathemat
 - For scene/material editing, read the current tool schemas and the workflow below.
 - For FK/IK, fine bones, blendshapes or Timeline authoring, read [Character Animation](Character-Animation.md).
   Inspect native groups and current handles; do not infer a Timeline binding from the active UI selection.
+- To organize a scene, create named folders with `add_folder` and move objects with `set_parent`. To
+  put a prop in a character's hand, take the key from `character_attach_points` (for example `a_n_hand_R`)
+  and pass it as `attachPoint`. Parenting keeps world placement; afterwards `position`/`rotation` are local
+  to the new parent and `scene_snapshot` still reports `worldPosition`.
 - For shader meaning, route through [Shader RenderDocs](../skills/studiomcp-shader-authoring/references/shader-renderdocs.md).
 - For source or binary publication, use [Release Readiness](Release-Readiness.md). Do not run live
   verification scripts as part of a read-only documentation or source audit.

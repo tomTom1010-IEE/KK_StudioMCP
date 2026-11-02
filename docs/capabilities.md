@@ -7,7 +7,8 @@ because it must wait for the end of a rendered frame; the MCP capture tool waits
 
 | Area | Tools / behavior |
 | --- | --- |
-| Scene | `scene_snapshot`, `add_item`, `add_character`, `set_transform`. Studio object IDs, hierarchy, saved transforms and renderer bounds. |
+| Scene | `scene_snapshot`, `add_item`, `add_character`, `set_transform`. Studio object IDs, hierarchy (`parentId`, plus `attachPoint` under a character), saved parent-local transforms, world position and renderer bounds. |
+| Hierarchy | `add_folder`, `set_parent`, `character_attach_points`. Native folders with saved names and Studio's workspace parent/unparent path: folders, items and routes take children; a character takes them on its attach points (accessory parents such as hands, head and waist). World placement is kept and saved position/rotation become local to the new parent. Saved in the scene PNG. |
 | Camera | `camera_get`, `camera_set`. Orbit pivot, Euler rotation, distance and field of view. The pivot is distinct from the camera eye. `camera_slots_get`, `camera_slot_save`, `camera_slot_load` use Studio's native camera slots, which are saved in the scene PNG. |
 | Lights | `catalog_search`, `add_light`, `light_set`. Native Studio light color, intensity, range, cone, enabled/shadow state, plus explicit culling mask and render mode. |
 | ME | `materials_list`, `material_inspect`, `material_set_shader`, `material_set`, `material_reset`, `material_import_texture`, `material_set_render_queue`. Shader/Float/Color/render-queue edits and PNG/JPEG import use installed ME public persistence APIs. |
@@ -47,6 +48,10 @@ because it must wait for the end of a rendered frame; the MCP capture tool waits
   KKPE/Timeline remain optional. Their edits are outside reversible batches; use checkpoints.
   Other providers' Timeline models are inspectable but not editable through this version.
 - Object deletion and scene import/merge are not MCP tools yet.
+- Folder creation and re-parenting are native scene edits outside reversible batches; use checkpoints.
+  `set_parent` validates every listed object before moving any and then follows Studio's own rules:
+  lights, cameras, text objects and a character's own node take no children, and a re-parented object
+  joins the end of its new parent's list. Attach to a character only after it has finished loading.
 - Undo restores ME's saved override or removes a newly created override. It does not snapshot arbitrary
   third-party plugin state. Perform undo before additional manual edits. Rollback errors are reported.
 - Native scene PNGs remain loadable through Studio normally. New bridge-authored cards embed their

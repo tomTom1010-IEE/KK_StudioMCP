@@ -241,15 +241,23 @@ namespace StudioMcp.Bridge
         internal JObject Describe(ObjectCtrlInfo target)
         {
             var amount = target.objectInfo.changeAmount;
-            int? parentId = null;
-            ObjectCtrlInfo parent;
+            // parentInfo also covers parents whose child nodes sit below a sub-node: character attach points and routes.
+            var parent = target.parentInfo;
             var node = target.treeNodeObject;
-            if (node?.parent != null && Studio.Studio.Instance.dicInfo.TryGetValue(node.parent, out parent))
-                parentId = parent.objectInfo.dicKey;
+            if (parent == null && node?.parent != null) Studio.Studio.Instance.dicInfo.TryGetValue(node.parent, out parent);
             var data = new JObject { ["id"] = target.objectInfo.dicKey,
                 ["name"] = node?.textName, ["type"] = target.GetType().Name, ["visible"] = node != null && node.visible,
-                ["parentId"] = parentId, ["position"] = Json(amount.pos),
+                ["parentId"] = parent != null ? parent.objectInfo.dicKey : (int?)null, ["position"] = Json(amount.pos),
                 ["rotation"] = Json(amount.rot), ["scale"] = Json(amount.scale) };
+            var point = HierarchyCommands.AttachPointIndex(target);
+            if (point.HasValue)
+            {
+                var info = HierarchyCommands.PointInfo(point.Value);
+                data["attachPoint"] = info?.key;
+                data["attachPointName"] = info?.name;
+            }
+            var transform = target.guideObject != null ? target.guideObject.transformTarget : null;
+            if (transform != null) data["worldPosition"] = Json(transform.position);
             var root = Root(target);
             var lamp = target as OCILight;
             if (lamp != null) data["light"] = new JObject { ["type"] = lamp.lightType.ToString(),

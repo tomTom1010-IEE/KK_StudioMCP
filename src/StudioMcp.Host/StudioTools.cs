@@ -31,7 +31,7 @@ public static class StudioTools
         int rendererId, string shader, int slot = 0)
         => bridge.Call("me.shader", Args(new { sceneSession, objectId, rendererId, shader, slot }));
 
-    [McpServerTool, Description("Read Studio-owned objects, transforms, bounds and the current camera. Paginated; not a dump of hidden Unity objects.")]
+    [McpServerTool, Description("Read Studio-owned objects, their parentId (plus attachPoint when hung from a character), saved parent-local transforms, world position, bounds and the current camera. Paginated; not a dump of hidden Unity objects.")]
     public static Task<JsonObject> SceneSnapshot(BridgeClient bridge, int offset = 0, int limit = 50)
         => bridge.Call("scene.snapshot", new JsonObject { ["offset"] = offset, ["limit"] = limit });
 
@@ -44,6 +44,20 @@ public static class StudioTools
     public static Task<JsonObject> SetTransform(BridgeClient bridge, string sceneSession, int objectId,
         float[]? position = null, float[]? rotation = null, float[]? scale = null)
         => bridge.Call("object.set_transform", Args(new { sceneSession, objectId, position, rotation, scale }));
+
+    [McpServerTool, Description("Create a native Studio folder (the workspace Folder button) with a saved display name. Optional parentId places it under a folder, item or route; for a character add attachPoint from character_attach_points. position/rotation are then local to that parent. Saved in the scene PNG; outside reversible batches.")]
+    public static Task<JsonObject> AddFolder(BridgeClient bridge, string sceneSession, string name,
+        int? parentId = null, string? attachPoint = null, float[]? position = null, float[]? rotation = null)
+        => bridge.Call("scene.add_folder", Args(new { sceneSession, name, parentId, attachPoint, position, rotation }));
+
+    [McpServerTool, Description("Re-parent 1-64 Studio objects through Studio's own workspace parent path: into a folder, item or route (parentId), onto a character attach point such as a hand (parentId plus attachPoint from character_attach_points), or back to the scene root (omit parentId). World placement is kept; saved position/rotation become local to the new parent, so a child follows its parent or the attached bone. All objects are validated before any move; returns each object's new state. Saved in the scene PNG; outside reversible batches.")]
+    public static Task<JsonObject> SetParent(BridgeClient bridge, string sceneSession, int[] objectIds,
+        int? parentId = null, string? attachPoint = null)
+        => bridge.Call("object.set_parent", Args(new { sceneSession, objectIds, parentId, attachPoint }));
+
+    [McpServerTool, Description("List a character's native Studio attach points (accessory parents such as hands, head, waist and feet): attachPoint key, Studio's display name, group and attached object IDs. Pass the key to set_parent or add_folder.")]
+    public static Task<JsonObject> CharacterAttachPoints(BridgeClient bridge, int objectId)
+        => bridge.Call("character.attach_points", Args(new { objectId }));
 
     [McpServerTool, Description("Read the camera orbit pivot, rotation, field of view and actual eye position.")]
     public static Task<JsonObject> CameraGet(BridgeClient bridge) => bridge.Call("camera.get");

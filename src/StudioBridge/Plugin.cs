@@ -38,6 +38,7 @@ namespace StudioMcp.Bridge
         internal CharacterCommands Characters;
         internal PoseEditorCommands PoseEditor;
         internal TimelineCommands Timeline;
+        internal HierarchyCommands Hierarchy;
         internal string Session = Guid.NewGuid().ToString("N");
         internal string OutputRoot;
         internal bool WritesEnabled => _allowWrites.Value
@@ -73,6 +74,7 @@ namespace StudioMcp.Bridge
             Characters = new CharacterCommands(this);
             PoseEditor = new PoseEditorCommands(this);
             Timeline = new TimelineCommands(this);
+            Hierarchy = new HierarchyCommands(this);
             _originalBackground = Application.runInBackground;
             Application.runInBackground = true;
             StudioSaveLoadApi.SceneLoad += SceneLoaded;
@@ -180,6 +182,7 @@ namespace StudioMcp.Bridge
                 ["characterControls"] = true, ["poseEditor"] = new JObject { ["available"] = PoseEditorCommands.Available },
                 ["timeline"] = TimelineCommands.State()
             };
+            if (HierarchyCommands.Handles(method)) return Hierarchy.Execute(method, args);
             if (method.StartsWith("character.", StringComparison.Ordinal)) return Characters.Execute(method, args);
             if (method.StartsWith("pose.", StringComparison.Ordinal)) return PoseEditor.Execute(method, args);
             if (method.StartsWith("timeline.", StringComparison.Ordinal)) return Timeline.Execute(method, args);
@@ -212,6 +215,7 @@ namespace StudioMcp.Bridge
                 || method == "me.render_queue"
                 || method == "render.set" || method == "skybox.bind" || method == "native_effects.set" || method == "native_sky.set"
                 || method == "object.set_visible" || method == "tonemap.set" || method == "dof_compat.set"
+                || method == "scene.add_folder" || method == "object.set_parent"
                 || method == "character.kinematics" || method == "character.control_set"
                 || method == "pose.bone_set" || method == "pose.bone_reset" || method == "pose.blendshape_set" || method == "pose.blendshape_reset"
                 || method == "timeline.control" || method == "timeline.settings" || method == "timeline.track_create"
