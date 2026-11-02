@@ -1,18 +1,18 @@
-# StudioMCP 0.2.0 RC1 Installation
+# StudioMCP 0.2.0 RC2 Installation
 
 This is a public release candidate, not a rendering-plugin bundle. Keep your game, mod stack and current
 scenes backed up. No installer or test runs automatically.
 
 ## Choose Downloads
 
-- `StudioMCP-0.2.0-rc1-Host.zip`: complete framework-dependent .NET 8 host, dependencies and the
+- `StudioMCP-0.2.0-rc2-Host.zip`: complete framework-dependent .NET 8 host, dependencies and the
   optional portable authoring skill. Tested on Windows; run the DLL through `dotnet`, not BepInEx.
-- `StudioMCP-0.2.0-rc1-KKS.zip`: KKS game bridge and its two managed dependencies, in game-relative
+- `StudioMCP-0.2.0-rc2-KKS.zip`: KKS game bridge and its two managed dependencies, in game-relative
   folders. The bridge targets .NET Framework 4.6 / KKS Mono.
-- `StudioMCP-0.2.0-rc1-KK.zip`: KK compatibility build, targeting .NET Framework 3.5 / legacy Mono.
+- `StudioMCP-0.2.0-rc2-KK.zip`: KK compatibility build, targeting .NET Framework 3.5 / legacy Mono.
   Newer KKS authoring features have not all been requalified on KK; optional DOF/snapshot controls
   deliberately return unavailable there. Do not interpret a successful build as full KK acceptance.
-  The new character/animation tools passed KKS live checks; they are build-verified only on KK.
+  The full character/animation suite passed on KKS; KK hierarchy tests additionally cover native FK following.
 - Verify all archives against the release's `SHA256SUMS.txt`. Each ZIP also contains a per-file
   `PACKAGE-MANIFEST.json` with exact source revision and payload hashes. Matching source is available
   at the same repository tag.
@@ -63,8 +63,8 @@ Blender and Unity Editor/Codex Bridge are authoring tools, not runtime requireme
 ```
 
 Client configuration formats differ. Merge reviewed settings; do not overwrite unrelated entries.
-When upgrading from 0.1.0 RC1, update both the host and bridge and restart/refresh the MCP client
-so it discovers all 60 tools. See `CHARACTER-ANIMATION.md` for posing, bindings and keyframe edits.
+When upgrading from an earlier release, update both the host and bridge and restart/refresh the MCP client
+so it discovers all 63 tools. See `CHARACTER-ANIMATION.md` for posing, bindings and keyframe edits.
 First call `studio_status` and `scene_snapshot`. The listener is authenticated loopback, default
 read-only. Enable writes explicitly only when needed through `Server.AllowWrites` in the bridge's
 BepInEx config or a documented process-scoped override. Old scene sessions/handles cannot be reused.
@@ -72,6 +72,16 @@ BepInEx config or a documented process-scoped override. Old scene sessions/handl
 The authoring skill is optional: copy its complete folder from `skills/studiomcp-shader-authoring`
 into one client-supported discovery root. It routes shader questions to the matching RenderDocs.
 MCP connection alone does not automatically load those documents.
+
+## Folders And Character Attachments
+
+RC2 adds `add_folder`, `set_parent` and `character_attach_points`. Update both the host and bridge
+and refresh the MCP client's tool list; it should contain 63 tools. Hierarchy tools need no KKPE.
+Create named folders, then move objects into them with `set_parent`. To attach a prop to a character,
+inspect `character_attach_points` and pass its key, such as `a_n_hand_R`, with the character's parent ID.
+Parenting keeps the prop's world placement. To place it at the attachment origin, follow with
+`set_transform` using local position `[0,0,0]`, then adjust local rotation and offset as needed.
+Omit the parent ID to detach to the scene root. Folder names and attachments save in native scene PNGs.
 
 ## Acceptance And Recovery
 
@@ -93,10 +103,10 @@ From a clean checkout at the release commit, PowerShell 7:
 $paths = @{
     KksGameRoot = '<your KKS installation>'
     KkGameRoot = '<your KK installation>'
-    OutputDirectory = '.local/releases/rc1-new-candidate'
+    OutputDirectory = '.local/releases/rc-new-candidate'
 }
 ./tools/package.ps1 @paths
-python ./tools/audit_packages.py --assets .local/releases/rc1-new-candidate/assets --commit <full-source-commit> --version 0.2.0-rc1
+python ./tools/audit_packages.py --assets .local/releases/rc-new-candidate/assets --commit <full-source-commit> --version 0.2.0-rc2
 ```
 
 The recipe requires committed dependency locks, builds edition-isolated outputs and creates a new

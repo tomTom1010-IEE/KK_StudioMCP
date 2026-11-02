@@ -120,7 +120,7 @@ foreach ($component in @('Host','KKS','KK')) {
     }
     WriteJson (Join-Path $directory 'PACKAGE-MANIFEST.json') ([ordered]@{
         schemaVersion=1;product='StudioMCP';version=$version;component=$component;sourceCommit=$revision;
-        repository='https://github.com/tomTom1010-IEE/KK_StudioMCP';runtimeAcceptance='KKS character/animation live checks passed; new KK features build-only; pre-release';files=$files
+        repository='https://github.com/tomTom1010-IEE/KK_StudioMCP';runtimeAcceptance='Hierarchy live checks passed on KK and KKS; full character/animation regression qualified on KKS only; see release notes';files=$files
     })
     $zip = Join-Path $assets ([IO.Path]::GetFileName($directory)+'.zip')
     Compress-Archive -Path (Join-Path $directory '*') -DestinationPath $zip -CompressionLevel Optimal

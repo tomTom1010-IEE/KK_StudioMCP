@@ -56,11 +56,18 @@ rendering-provider DLLs. Keep raw protocol responses, images and connection data
 - Verify missing optional providers return unavailable or a clear error while common tools work.
   KKS acceptance does not qualify the new tools on KK or with another provider version.
 
+## Scene Hierarchy
+
+- Create named nested folders and reparent multiple objects. Check world placement, parent motion,
+  no-op moves and detaching to the root. Reject cycles and invalid object IDs without moving objects.
+- Inspect character attach points. Attach an item to a hand, pose the arm with native FK and check
+  that it follows. Check other available points, then save/reload and reacquire object handles.
+
 ## Record The Result
 
 Record exact archive/source hashes, game/API/ME/Screencap versions, accepted tools and remaining
 failures. Public release notes may summarize results but must not include connection descriptors,
-raw logs, proprietary binaries or user cards. Offline fixtures and 60-tool discovery do not replace
+raw logs, proprietary binaries or user cards. Offline fixtures and 63-tool discovery do not replace
 this live acceptance. Until it passes, keep this release explicitly pre-release.
 
 The optional extended live verifier needs Python and Pillow, and explicit paths:

@@ -1,7 +1,7 @@
-# Release Readiness: 0.2.0 RC1
+# Release Readiness: 0.2.0 RC2
 
-Review date: 2026-10-31. This public release candidate adds character posing and animation to the existing
-scene/material/rendering tools, including direct blendshape linking consistent with KKPE.
+Review date: 2026-11-03. This public release candidate adds character posing and animation to the existing
+scene/material/rendering tools, including native folders, parenting and character attach points.
 Publishing does not change the repository's visibility or qualify
 every game edition and provider combination.
 
@@ -11,7 +11,7 @@ Native FK/IK uses Studio's original interfaces. Fine bones and blendshapes use K
 persistence methods; tracks and keyframes use existing Timeline/KKPE models. No new solver,
 animation scheduler or saved-data format is introduced. Optional providers are not bundled.
 
-Product version comes from Directory.Build.props: 0.2.0-rc1, assembly/file version 0.2.0.0.
+Product version comes from Directory.Build.props: 0.2.0-rc2, assembly/file version 0.2.0.0.
 BepInEx metadata uses version 0.2.0 and the unchanged GUID com.tomtom.studiomcp. Informational
 versions and package manifests record the exact source commit; it must match the release tag.
 The MCP SDK dependency version remains separate from the product version.
@@ -22,7 +22,8 @@ The MCP SDK dependency version remains separate from the product version.
 | --- | --- |
 | Existing adapter contracts | 72 KKS and 37 KK cases with linked production sources and minimal contract doubles |
 | Real-reference builds | Release host plus KK and KKS bridges, locked dependency restore, no warnings/errors |
-| Packaged host discovery | 60 tools; all original 40 tools retained, existing parameter/default contracts preserved |
+| Packaged host discovery | 63 tools; all previous 60 tools retain their input schemas and defaults |
+| Hierarchy acceptance | Native folders, parenting, both hand/head/waist attach points, FK following and scene reload in KK; earlier KKS hierarchy regression recorded in verification history |
 | KKS animation acceptance | Native FK/IK, KKPE channels and resets, ten track kinds, interpolation, native scene reload and capture |
 | Provider versions for that live check | KKPE 2.21.4 and Timeline 1.5.4; other versions need their own acceptance |
 | Archive audit | Exact source/version, payload inventory, dependency allowlists and every file/archive hash |
@@ -37,12 +38,13 @@ The linked-eye regression passed on four real KKS meshes, including negative/ove
 reset, native scene save/reload and Timeline interpolation. Thirteen production-linked adapter
 checks covered the link switch, distinct originals and remapped indices using contract doubles.
 
-The new animation tools are build-verified only on KK. A KKS pose/capture does not qualify other
+The KK hierarchy regression includes native FK following, not the complete character/animation suite.
+KKPE fine edits, IK and Timeline still need separate KK runtime acceptance. A KKS pose/capture does not qualify other
 provider versions, other posing/physics plugins, long-running motion or GPU failure paths.
 
 ## Packaging And Installation
 
-See [Installation](Installation.md), [release notes](ReleaseNotes-0.2.0-rc1.md),
+See [Installation](Installation.md), [release notes](ReleaseNotes-0.2.0-rc2.md),
 [character animation](Character-Animation.md), [acceptance checklist](RC1-Acceptance.md),
 [contract tests](../tests/ExtensionContracts/README.md) and [dependency notices](../THIRD-PARTY-NOTICES.md).
 

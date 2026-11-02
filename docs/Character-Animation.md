@@ -1,8 +1,10 @@
 # Character posing and Timeline
 
-Version 0.2.0 RC1 extends the original 40 tools with 20 character/animation tools. Update both the
-host and game bridge and refresh the client's tool list. The 0.1.0 RC1 packages do not contain them.
-The new tools passed live checks on KKS with KKPE 2.21.4 and Timeline 1.5.4; KK is build-verified only.
+The 0.2.0 release series adds 20 character/animation tools to the original 40. With the three
+hierarchy tools in RC2, the host exposes 63 tools. Update both the host and game bridge and refresh
+the client's tool list. The 0.1.0 RC1 packages do not contain these additions.
+The full suite passed live checks on KKS with KKPE 2.21.4 and Timeline 1.5.4. KK hierarchy checks
+also exercise native FK following; the complete KKPE/IK/Timeline suite remains unqualified on KK.
 
 ## Providers and saved data
 

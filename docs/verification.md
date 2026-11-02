@@ -215,3 +215,20 @@ file remained unchanged:
 A Screencap capture of the reloaded scene showed the attached item at the right hand after its local
 position was set to the origin. The owned test process was closed afterward. The KK target was not
 compiled or run for this change.
+
+## KK hierarchy regression — 2026-11-03
+
+The same hierarchy implementation passed a real-reference KK Release build and Host build with
+zero warnings/errors. The full `verify_hierarchy.py` sequence then passed in an owned, initially
+empty KK Studio with process-scoped writes, using a copy of a native KK female card. The source
+card hash was unchanged. MCP discovery returned 63 tools.
+
+All seven hierarchy groups listed above passed on KK: named nested folders, world-position
+preservation and folder following, multi-object/no-op moves, right-hand attachment following a
+native FK arm bend, rejection without mutation, detach/left-hand folders and native scene reload.
+Additional checks covered stale sessions, parenting under an item, switching between head, waist
+and both hand points, and an actual 640x480 Screencap capture which was inspected.
+
+The owned process was closed afterward. Cards, responses, checkpoints and captures remain local.
+These KK checks cover hierarchy and the FK movement used by that test, not the full KKPE/IK/Timeline
+regression. The earlier KKS hierarchy result remains separately recorded above.
